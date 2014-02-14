@@ -157,3 +157,20 @@ open_launchpad() {
 	current_schedule = 0;
 	sys_status = 0;
 }
+
+// store performance of a user
+record_user_performance() {
+
+}
+
+// use the data collected in real-time to update the 3D model
+update_model() {
+
+}
+
+// compare the performance of the user and the standard performance 
+// and calculate performance score
+calculate_performance_score() {
+	int score = 0;
+	return score;
+}
