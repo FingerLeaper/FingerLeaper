@@ -3,6 +3,7 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 var origin = new THREE.Vector3( 0, 0, 0 );
+
 // camera
 var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
 camera.position.x = 40;
@@ -25,6 +26,8 @@ var length = [21, 15, 16, 18, 16, 18, 16, 17, 16, 16];
 var width = 6;
 var gap_joint = 1;
 var gap_finger = (palm_size[1]-4*width)/3;
+
+// default phalange position
 var phalange_position = [palm_size[1]/2+gap_finger+width/2,0,0,
                 palm_size[1]/2+gap_finger+width/2,0,-(length[0]/2+gap_joint+length[1]/2),
 
@@ -40,6 +43,7 @@ var phalange_position = [palm_size[1]/2+gap_finger+width/2,0,0,
                 -palm_size[1]/2+width/2,0,-(palm_size[0]/2+gap_joint+length[8]/2),
                 -palm_size[1]/2+width/2,0,-(palm_size[0]/2+2*gap_joint+length[8]*1.5)];
 
+// add phalanges
 for (var i = 0; i < 10; i ++) {
     var phalange = new THREE.Mesh(new THREE.CubeGeometry(width, width, length[i]), new THREE.MeshNormalMaterial());
     phalanges[i] = phalange;
@@ -47,6 +51,7 @@ for (var i = 0; i < 10; i ++) {
     phalanges[i].position.set(phalange_position[i * 3] - 1000,phalange_position[i * 3 + 1],phalange_position[i * 3 + 2]);
 }
 
+// use for debug, indicate the axises
 var base = new THREE.Mesh(new THREE.CubeGeometry(10,9,15), new THREE.MeshNormalMaterial());
 scene.add(base);
 base.position.set(0,0,0);
@@ -61,6 +66,7 @@ var finger_root = [[palm_size[1]/2+gap_finger/2,0,0],
                     [-gap_finger/2-width/2,     0,  -(palm_size[0]/2+gap_joint/2)],
                     [-palm_size[1]/2+width/2,   0,  -(palm_size[0]/2+gap_joint/2)]];
 
+// add light
 var light = new THREE.DirectionalLight(0xffffff);
 light.position.set(0, 300, 0);
 light.castShadow = true;
@@ -76,6 +82,7 @@ light.shadowDarkness = 0.7;
 
 scene.add(light);
 
+// loop and render the scene
 render();
 var time = 0;
 Leap.loop(function (frame) {
@@ -89,7 +96,8 @@ Leap.loop(function (frame) {
 
 // this function is executed on each animation frame
 function animate(frame){
-    // render
+    
+    // update the position and rotate angles of palm
     palm.position = origin_palm_position;
     if (frame.hands.length == 0)
         return;
@@ -98,7 +106,8 @@ function animate(frame){
         return;
     var fingers = hand.pointables;
 
-    // new basis for the rotated coordinate system
+
+    // obtain the basis vectors for the rotated coordinate system
 
     var z_axis = new THREE.Vector3().fromArray(hand.direction);
     var y_axis = new THREE.Vector3().fromArray(hand.palmNormal);
@@ -107,63 +116,64 @@ function animate(frame){
 
     // obtain the rotate angles for the palm
     var palm_rotate = rotate_para(z_axis, y_axis);
-
     palm.rotation.set(palm_rotate.x, palm_rotate.y, palm_rotate.z);
 
+    // put the fingers in order
     var squence = finger_sequence (hand);
-    console.log(squence);
 
     // TODO: only draw left hand, need to implement right hand
     if (squence[5] == 1)
         return;
-    var palm_position = (new THREE.Vector3()).fromArray(hand.palmPosition);
 
+    var palm_position = (new THREE.Vector3()).fromArray(hand.palmPosition);
     var ratio0 = 0.5;
     var ratio1 = 0.5;
-    var zoom = 0.6;
+    var zoom = 0.6;     // used to rescale the tip position detected from the device
 
     for (var i = 0; i < 5; i ++) {
+
+        // if the finger is not detected or broken
         if (squence[i] == undefined)
             continue;
         var finger = fingers[squence[i]];
         if (finger == undefined)
             continue;
 
+        // the root of the proximal phalanx
         var rotated_root = new THREE.Vector3();
+        // root of the middle phalanx
         var middle_joint = new THREE.Vector3();
         var phalange_direction = new THREE.Vector3();
         var phalange_norm = new THREE.Vector3();
         var phalange_rotation = new THREE.Vector3();
         var finger_direction = new THREE.Vector3().fromArray(finger.direction);
+        // the rescaled tip position relative to the position of palm
         var tip = (new THREE.Vector3()).fromArray(finger.tipPosition).sub(palm_position).multiplyScalar(zoom);
 
+        // obtain the root of the proximal phalanx in the new coordinate system
         rotated_root.add(x_axis.clone().multiplyScalar(finger_root[i][0]));
         rotated_root.sub(y_axis.clone().multiplyScalar(finger_root[i][1]));
         rotated_root.sub(z_axis.clone().multiplyScalar(finger_root[i][2]));
 
-        // console.log(rotated_root);
-
         middle_joint = tip.clone().sub(finger_direction.clone().multiplyScalar(length[i * 2 + 1] / 2));
-        // console.log(middle_joint);
 
+        // position of the proximal phalanx
         var position0 = rotated_root.clone().multiplyScalar(1-ratio0).add(middle_joint.clone().multiplyScalar(ratio0));
         phalanges[i * 2].position.set(position0.x,position0.y,position0.z);
-        // console.log(position0);
 
         phalange_direction = middle_joint.clone().sub(position0);
         phalange_norm = phalange_direction.clone().cross(y_axis.clone().cross(phalange_direction));
         phalange_rotation = rotate_para(phalange_direction, phalange_norm);
         phalanges[i * 2].rotation.set(phalange_rotation.x, phalange_rotation.y, phalange_rotation.z);
 
+        // position of the middle phalanx
         var position1 = middle_joint.clone().multiplyScalar(1-ratio1).add(tip.clone().multiplyScalar(ratio1));
         phalanges[i * 2 + 1].position.set(position1.x, position1.y, position1.z);
-        // console.log(position1);
 
         phalange_direction = (new THREE.Vector3()).fromArray(finger.direction);
         phalange_norm = phalange_direction.clone().cross(y_axis.clone().cross(phalange_direction));
         phalange_rotation = rotate_para(phalange_direction, phalange_norm);
         phalanges[i * 2 + 1].rotation.set(phalange_rotation.x, phalange_rotation.y, phalange_rotation.z);
-
     }
 }
 
@@ -172,6 +182,8 @@ function render() {
     requestAnimationFrame(render);
 }
 
+// obtain the angles needed to rotat to the current direction
+// note: not precise with a relatively ignorable offset
 function rotate_para (dst_direction, dst_norm) {
     var rotate_angles = new THREE.Vector3(0, 0, 0);
 
@@ -186,6 +198,11 @@ function rotate_para (dst_direction, dst_norm) {
     return rotate_angles;
 }
 
+// used to put the fingers in order and determine whether it is a left hand
+// the first 5 digits indicate the squence number of the current finger,
+// e.g. squence[0] = 3 indicates that fingers[3] is the thumb, squence[1] = 2 indicates that fingers[2] is the index finger
+// the last digit indicates whether it is a left hand, squence[5] = 0 indicates it is a left hand
+// TODO: NEEDED TO REIMPLEMENTED!!!
 function finger_sequence (hand) {
 
     var fingers = hand.pointables;
