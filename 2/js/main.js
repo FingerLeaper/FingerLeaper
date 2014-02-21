@@ -1,24 +1,19 @@
-// renderer
+int sys_status = 0;
+int app_status = 2;
+int cur_app_focus = 0;
+int countdown_length = 3 * frameRate;
+int cur_countdown_status = countdown_length;
+int app_length = CONSTANT;
+int current_schedule = 0;
+var valid_range = [[-20,20],[-16,16]];
+
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
 var origin = new THREE.Vector3( 0, 0, 0 );
-
-// camera
 var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-camera.position.x = 40;
-camera.position.y = 130;
-camera.position.z = 10;
-camera.lookAt(origin);
-
-// scene
 var scene = new THREE.Scene();
-
-// draw palm
 var palm_size = [46,40];
 var palm = new THREE.Mesh(new THREE.CubeGeometry(palm_size[1], 4, palm_size[0]), new THREE.MeshNormalMaterial());
-palm.overdraw = true;
-scene.add(palm);
+
 
 // draw fingers
 var phalanges = [];
@@ -43,20 +38,7 @@ var phalange_position = [palm_size[1]/2+gap_finger+width/2,0,0,
                 -palm_size[1]/2+width/2,0,-(palm_size[0]/2+gap_joint+length[8]/2),
                 -palm_size[1]/2+width/2,0,-(palm_size[0]/2+2*gap_joint+length[8]*1.5)];
 
-// add phalanges
-for (var i = 0; i < 10; i ++) {
-    var phalange = new THREE.Mesh(new THREE.CubeGeometry(width, width, length[i]), new THREE.MeshNormalMaterial());
-    phalanges[i] = phalange;
-    scene.add(phalanges[i]);
-    phalanges[i].position.set(phalange_position[i * 3] - 1000,phalange_position[i * 3 + 1],phalange_position[i * 3 + 2]);
-}
-
-// use for debug, indicate the axises
 var base = new THREE.Mesh(new THREE.CubeGeometry(10,9,15), new THREE.MeshNormalMaterial());
-scene.add(base);
-base.position.set(0,0,0);
-var t = 0;
-
 var origin_direction = new THREE.Vector3( 0, 0, -1);
 var origin_norm = new THREE.Vector3( 0,-1, 0);
 var origin_palm_position = new THREE.Vector3(0, 0, 0);
@@ -66,245 +48,217 @@ var finger_root = [[palm_size[1]/2+gap_finger/2,0,0],
                     [-gap_finger/2-width/2,     0,  -(palm_size[0]/2+gap_joint/2)],
                     [-palm_size[1]/2+width/2,   0,  -(palm_size[0]/2+gap_joint/2)]];
 
-// add light
 var light = new THREE.DirectionalLight(0xffffff);
-light.position.set(0, 300, 0);
-light.castShadow = true;
-light.shadowCameraLeft = -60;
-light.shadowCameraTop = -60;
-light.shadowCameraRight = 60;
-light.shadowCameraBottom = 60;
-light.shadowCameraNear = 1;
-light.shadowCameraFar = 1000;
-light.shadowBias = -0.0001;
-light.shadowMapWidth = light.shadowMapHeight = 1024;
-light.shadowDarkness = 0.7;
 
-scene.add(light);
+var user_performance = [];
 
-// loop and render the scene
-render();
-var time = 0;
+function step(frame) {
+	// init
+	if (frame.hands.length == 0)
+		return;
+	var hand = frame.hands[0];
+	if (hand == undefined)
+		return;
+	var fingers = hand.pointables;
+	if (fingers.length == 0)
+		return;
+	var gestures = frame.gestures;
+
+	switch sys_status:
+	case 0:
+		switch current_gesture(frame):
+
+		// right swipe to focus on the previous app
+		case 4:
+			cur_app_focus --;
+			break;
+
+		// left swipe to focus on the next app
+		case 3:
+			cur_app_focus ++;
+			break;
+		
+		// key tap to select one app
+		case 5:
+			current_schedule = 0;
+			user_performance = [];
+			app_length = cur_app_length;
+            setup_scene();
+			sys_status = 1;
+			break;
+		default:
+			break;
+	case 1:
+		update_gesture_status();
+		if isUserReady() == true:
+			sys_status == 2;
+		else if current_gesture(frame) == 1:
+			open_launchpad();
+		break;
+	case 2:
+		update_gesture_status();
+		switch app_status:
+		
+		// count down to start the exercise
+		case 0:
+			if cur_countdown_status == 0:
+				cur_countdown_status = countdown_length;
+				app_status = 1;
+			cur_countdown_status --;
+			break;
+		
+		// during exercise
+		case 1:
+		
+			// if the number of hands is 2 and the position of hands is right
+			if isUserReady() == true:
+
+				// exercise continue
+				current_schedule ++;
+				record_user_performance();
+				update_model();
+				calculate_performance_score();
+
+				// if the exercise reaches the end
+				if current_schedule == app_length:
+					app_status = 3;
+
+			else:
+		
+				// the hands lose their position 
+				// and the exercise has to suspend and enter the waiting stage
+                
+				// TODO: Store current process;
+				app_status = 2;
+			break;
+		
+		// during waiting stage
+		case 2:
+		
+			// if the hands revert to the right position
+			if isUserReady() == true:
+				recover();
+
+			// if a circle gesture is made and restart the exercise
+			else if current_gesture(frame) == 2:
+				restart();
+
+			// is a pinch gesture is made and return the launchpad
+			else if current_gesture(frame) == 1;
+				open_launchpad();
+			
+			break;
+		
+		// if the exercise has been accomplished and enter the finish stage
+		case 3:
+			switch current_gesture(frame):
+		
+			// a circle gesture is made
+			case 2:
+				restart();
+				break;
+		
+			// return the launchpad page
+			case 1:
+				open_launchpad();
+				break;
+			break;
+		default:
+			break;
+    update_actions();
+}
+
 Leap.loop(function (frame) {
-    var date = new Date();
-    if (date.getTime() - time > 100) {
-        time = date.getTime();
-        animate(frame);
-    }
-    // animate(frame);
+	step(frame);
 });
 
-// this function is executed on each animation frame
-function animate(frame){
-    
-    // update the position and rotate angles of palm
-    palm.position = origin_palm_position;
-    if (frame.hands.length == 0)
-        return;
-    var hand = frame.hands[0];
-    if (hand == undefined || hand.pointables.length == 0)
-        return;
-    var fingers = hand.pointables;
-
-
-    // obtain the basis vectors for the rotated coordinate system
-
-    var z_axis = new THREE.Vector3().fromArray(hand.direction);
-    var y_axis = new THREE.Vector3().fromArray(hand.palmNormal);
-    var x_axis = y_axis.clone().cross(z_axis);
-    x_axis.setLength(1);
-
-    // obtain the rotate angles for the palm
-    var palm_rotate = rotate_para(z_axis, y_axis);
-    palm.rotation.set(palm_rotate.x, palm_rotate.y, palm_rotate.z);
-
-    // put the fingers in order
-    var squence = finger_sequence (hand);
-
-    // TODO: only draw left hand, need to implement right hand
-    if (squence[5] == 1)
-        return;
-
-    var palm_position = (new THREE.Vector3()).fromArray(hand.palmPosition);
-    var ratio0 = 0.5;
-    var ratio1 = 0.5;
-    var zoom = 0.6;     // used to rescale the tip position detected from the device
-
-    for (var i = 0; i < 5; i ++) {
-
-        // if the finger is not detected or broken
-        if (squence[i] == undefined)
-            continue;
-        var finger = fingers[squence[i]];
-        if (finger == undefined)
-            continue;
-
-        // the root of the proximal phalanx
-        var rotated_root = new THREE.Vector3();
-        // root of the middle phalanx
-        var middle_joint = new THREE.Vector3();
-        var phalange_direction = new THREE.Vector3();
-        var phalange_norm = new THREE.Vector3();
-        var phalange_rotation = new THREE.Vector3();
-        var finger_direction = new THREE.Vector3().fromArray(finger.direction);
-        // the rescaled tip position relative to the position of palm
-        var tip = (new THREE.Vector3()).fromArray(finger.tipPosition).sub(palm_position).multiplyScalar(zoom);
-
-        // obtain the root of the proximal phalanx in the new coordinate system
-        rotated_root.add(x_axis.clone().multiplyScalar(finger_root[i][0]));
-        rotated_root.sub(y_axis.clone().multiplyScalar(finger_root[i][1]));
-        rotated_root.sub(z_axis.clone().multiplyScalar(finger_root[i][2]));
-
-        middle_joint = tip.clone().sub(finger_direction.clone().multiplyScalar(length[i * 2 + 1] / 2));
-
-        // position of the proximal phalanx
-        var position0 = rotated_root.clone().multiplyScalar(1-ratio0).add(middle_joint.clone().multiplyScalar(ratio0));
-        phalanges[i * 2].position.set(position0.x,position0.y,position0.z);
-
-        phalange_direction = middle_joint.clone().sub(position0);
-        phalange_norm = phalange_direction.clone().cross(y_axis.clone().cross(phalange_direction));
-        phalange_rotation = rotate_para(phalange_direction, phalange_norm);
-        phalanges[i * 2].rotation.set(phalange_rotation.x, phalange_rotation.y, phalange_rotation.z);
-
-        // position of the middle phalanx
-        var position1 = middle_joint.clone().multiplyScalar(1-ratio1).add(tip.clone().multiplyScalar(ratio1));
-        phalanges[i * 2 + 1].position.set(position1.x, position1.y, position1.z);
-
-        phalange_direction = (new THREE.Vector3()).fromArray(finger.direction);
-        phalange_norm = phalange_direction.clone().cross(y_axis.clone().cross(phalange_direction));
-        phalange_rotation = rotate_para(phalange_direction, phalange_norm);
-        phalanges[i * 2 + 1].rotation.set(phalange_rotation.x, phalange_rotation.y, phalange_rotation.z);
-    }
+// restart and discard and the process currently stored
+function restart() {
+	app_status = 2;
+	user_performance = null;
+	current_schedule = 0;
 }
 
-function render() {
-    renderer.render(scene, camera);
-    requestAnimationFrame(render);
+// back to exercise stage and continue
+function recover() {
+	app_status = 0;
 }
 
-// obtain the angles needed to rotat to the current direction
-// note: not precise with a relatively ignorable offset
-function rotate_para (dst_direction, dst_norm) {
-    var rotate_angles = new THREE.Vector3(0, 0, 0);
+// check pinch gesture status using FSM
+function update_gesture_status(hand) {
 
-    // TODO: figure out the angles needed to rotate
-    rotate_angles.x = Math.atan(dst_norm.z/dst_norm.y);
-
-    var dir0 = new THREE.Vector3(0, -dst_norm.z, dst_norm.y);
-    rotate_angles.y = dir0.angleTo(new THREE.Vector3(dst_direction.x, dst_direction.y, dst_direction.z));
-    if (dst_direction.x > 0)
-        rotate_angles.y = -rotate_angles.y;
-    rotate_angles.z = Math.atan(dst_norm.x/Math.sqrt(dst_norm.z*dst_norm.z+dst_norm.y*dst_norm.y));
-    return rotate_angles;
 }
 
-// used to put the fingers in order and determine whether it is a left hand
-// the first 5 digits indicate the squence number of the current finger,
-// e.g. squence[0] = 3 indicates that fingers[3] is the thumb, squence[1] = 2 indicates that fingers[2] is the index finger
-// the last digit indicates whether it is a left hand, squence[5] = 0 indicates it is a left hand
-// TODO: NEEDED TO REIMPLEMENTED!!!
-function finger_sequence (hand) {
+// record and check if a pinch gesture is made
+function pinch_gesture(hand) {
+	if (hand != undefined && hand.fingers < 2) {
+		console.log("pinch gesture detected.");
+		return true;
+	}
+	return false;
+}
 
-    var fingers = hand.pointables;
-    var direction = (new THREE.Vector3()).fromArray(hand.direction);
-    var palm_position = (new THREE.Vector3()).fromArray(hand.palmPosition);
-    var min = 99999;
-    var squence = new Array(6); // squence[5] = 0: left hand; =1:right hand
+// return the currently most probab gesture
+function current_gesture(frame) {
+	
+	if (frame.gestures.length == 0)
+		return 0;
+	var gesture = frame.gestures[0];
 
-    squence = [4,1,0,2,3];
-    squence[5] = 0;
-    return squence;
+	if (pinch_gesture(frame.hands[0]) == true) {
+		return 1;
+	} 
+	else if (gesture.type == "circle") {
+		return 2;
+	} 
+	else if (gesture.type == "swipe")
+	{
+		if (gesture.direction[0] < 0)
+			return 3;
+		else
+			return 4;
+	}
+	else if (gesture.type == "keyTap") {
+		return 5;
+	}
+	return 0;
+}
 
-    var m = -1;
+// return the launchpad page
+function open_launchpad() {
+	app_status = 2;
+	user_performance = null;
+	current_schedule = 0;
+	sys_status = 0;
+}
 
-    // find the middle finger
-    for (var i = 0; i < fingers.length; i ++) {
-        var relative_position = new THREE.Vector3();
-        var tip_position = (new THREE.Vector3()).fromArray(fingers[i].tipPosition);
-        relative_position.subVectors(tip_position, palm_position);
-        var d_square = Math.pow(relative_position.x, 2) + Math.pow(relative_position.y, 2) + Math.pow(relative_position.z, 2)
-        -(direction.dot(relative_position));
-        if (d_square < min) {
-            m = i;
-            min = d_square;
-            squence[2] = i;
-        }
-    }
-    console.log("middle finger index: " + m);
+// store performance of a user
+function record_user_performance() {
 
-    // divide other fingers into two groups
-    var left_fingers = [];
-    var right_fingers = [];
-    for (var i = 0; i < fingers.length; i ++) {
-        if (i == m)
-            continue;
-        if (fingers[i].tipPosition[0] > fingers[m].tipPosition[0])
-            right_fingers[right_fingers.length] = i;
-        else
-            left_fingers[left_fingers.length] = i;
-    }
+}
 
-    console.log("left_fingers: " + left_fingers);
-    console.log("right_fingers: " + right_fingers);
-    if (left_fingers.length > right_fingers.length) {
-        squence[5] = 0;
-        if (left_fingers.length == 1) {
-            squence[3] = left_fingers[0];
-        } else {
-            if (fingers[left_fingers[0]].tipPosition[0] > fingers[left_fingers[1]].tipPosition[0]) {
-                squence[3] = left_fingers[0];
-                squence[4] = left_fingers[1];
-            } else {
-                squence[3] = left_fingers[1];
-                squence[4] = left_fingers[0];
-            }
-            if (right_fingers.length == 1)
-                squence[1] = right_fingers[0];
-        }
-    } else if (left_fingers.length < right_fingers.length) {
-        squence[5] = 1;
-        if (right_fingers.length == 1) {
-            squence[3] = right_fingers[0];
-        } else {
-            if (fingers[right_fingers[0]].tipPosition[0] > fingers[right_fingers[1]].tipPosition[0]) {
-                squence[3] = right_fingers[1];
-                squence[4] = right_fingers[0];
-            } else {
-                squence[3] = right_fingers[0];
-                squence[4] = right_fingers[1];
-            }
-            if (left_fingers.length == 1)
-                squence[1] = left_fingers[0];
-        }
-    } else {
-        if (left_fingers.length < 2) {
-            return squence;
-        }
-        if (fingers[left_fingers[0]].tipPosition[0] < fingers[left_fingers[1]].tipPosition[0]) {
-            var t = left_fingers[0];
-            left_fingers[0] = left_fingers[1];
-            left_fingers[1] = t;
-        }
-        if (fingers[right_fingers[0]].tipPosition[0] > fingers[right_fingers[1]].tipPosition[0]) {
-            var t = right_fingers[0];
-            right_fingers[0] = right_fingers[1];
-            right_fingers[1] = t;
-        }
+// use the data collected in real-time to update the 3D model
+function update_model() {
+    renderer();
+    animate();
+}
 
-        if (fingers[right_fingers[1]].length > fingers[left_fingers[1]].length) {
-            squence[5] = 1;
-            squence[0] = left_fingers[1];
-            squence[1] = left_fingers[0];
-            squence[3] = right_fingers[0];
-            squence[4] = right_fingers[1];
-        } else {
-            squence[5] = 0;
-            squence[0] = right_fingers[1];
-            squence[1] = right_fingers[0];
-            squence[3] = left_fingers[0];
-            squence[4] = left_fingers[1];
-        }
-    }
+// compare the performance of the user and the standard performance 
+// and calculate performance score
+function calculate_performance_score() {
+	int score = 0;
+	return score;
+}
 
-    return squence;
+function isUserReady (hand) {
+    if (hand == undefined)
+        return false;
+    var position = hand.palmPosition;
+    if (position[0] > valid_range[0][0] && position[0] < valid_range[0][1] && position[1] > valid_range[1][0] && position[1] < valid_range[1][1])
+        return true;
+	return false;
+}
+
+function update_actions () {
+    // body...
 }

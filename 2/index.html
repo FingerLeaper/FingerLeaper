@@ -1,20 +1,23 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title></title>
-  <link rel="stylesheet" href="./css/main.css" />
+<meta charset="UTF-8">
+<title>FingerLeaper</title>
+<link rel="stylesheet" href="./css/main.css" />
 </head>
+<script src="./js/vendor/three-r60.min.js"></script>
+<script src="./js/vendor/leap.min.js"></script>
+<script src="./js/load_model.js"></script>
+<script src="./js/main.js"></script>
 <body>
-
-  <div class="viewport"></div>
-  <div class="splash">
-    <h1>Connect the Leap Motion controller</h1>
-  </div>
-
-  <script src="./js/vendor/three-r60.min.js"></script>
-  <script src="./js/vendor/leap.min.js"></script>
-  <script src="./js/main.js"></script>
+<div class="launchpad">
+  <div><canvas class="item" src="./static/img/app1.jpg"></canvas></div>
+  <div><canvas class="item" src="./static/img/app2.jpg"></canvas></div>
+  <div><canvas class="item" src="./static/img/app3.jpg"></canvas></div>
+</div>
+<div class="waiting">
+  <div><canvas class="button" src="./static/img/menu.jpg"></canvas></div>
+  <div><canvas class="button" src="./static/img/restart.jpg"></canvas></div>
+</div>
 </body>
 </html>

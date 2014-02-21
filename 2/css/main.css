@@ -1,0 +1,24 @@
+.launchpad
+{
+position:fixed;
+background-color: rgba(0, 0, 0, 0.6);
+background: rgba(0, 0, 0, 0.6);
+color: rgba(0, 0, 0, 0.6);
+border:hidden 4px #381938;
+-moz-border-radius-topleft: 12px;
+-moz-border-radius-topright:12px;
+-moz-border-radius-bottomleft:12px;
+-moz-border-radius-bottomright:12px;
+-webkit-border-top-left-radius:12px;
+-webkit-border-top-right-radius:12px;
+-webkit-border-bottom-left-radius:12px;
+-webkit-border-bottom-right-radius:12px;
+border-top-left-radius:12px;
+border-top-right-radius:12px;
+border-bottom-left-radius:12px;
+border-bottom-right-radius:12px;
+}
+.waiting
+{
+
+}
