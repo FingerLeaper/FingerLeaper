@@ -6,7 +6,7 @@ var origin = new THREE.Vector3( 0, 0, 0 );
 // camera
 var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
 camera.position.x = 40;
-camera.position.y = 100;
+camera.position.y = 130;
 camera.position.z = 10;
 camera.lookAt(origin);
 
@@ -14,16 +14,16 @@ camera.lookAt(origin);
 var scene = new THREE.Scene();
 
 // draw palm
-var palm_size = [40,36];
+var palm_size = [46,40];
 var palm = new THREE.Mesh(new THREE.CubeGeometry(palm_size[1], 4, palm_size[0]), new THREE.MeshNormalMaterial());
 palm.overdraw = true;
 scene.add(palm);
 
 // draw fingers
 var phalanges = [];
-var length = [15, 14, 18, 18, 20, 20, 18, 18, 16, 16];
-var width = 5;
-var gap_joint = 2;
+var length = [21, 15, 16, 18, 16, 18, 16, 17, 16, 16];
+var width = 6;
+var gap_joint = 1;
 var gap_finger = (palm_size[1]-4*width)/3;
 var phalange_position = [palm_size[1]/2+gap_finger+width/2,0,0,
                 palm_size[1]/2+gap_finger+width/2,0,-(length[0]/2+gap_joint+length[1]/2),
@@ -44,18 +44,22 @@ for (var i = 0; i < 10; i ++) {
     var phalange = new THREE.Mesh(new THREE.CubeGeometry(width, width, length[i]), new THREE.MeshNormalMaterial());
     phalanges[i] = phalange;
     scene.add(phalanges[i]);
-    phalanges[i].position.set(phalange_position[i * 3],phalange_position[i * 3 + 1],phalange_position[i * 3 + 2]);
+    phalanges[i].position.set(phalange_position[i * 3] - 1000,phalange_position[i * 3 + 1],phalange_position[i * 3 + 2]);
 }
+
+var base = new THREE.Mesh(new THREE.CubeGeometry(10,9,15), new THREE.MeshNormalMaterial());
+scene.add(base);
+base.position.set(0,0,0);
 var t = 0;
 
 var origin_direction = new THREE.Vector3( 0, 0, -1);
 var origin_norm = new THREE.Vector3( 0,-1, 0);
 var origin_palm_position = new THREE.Vector3(0, 0, 0);
 var finger_root = [[palm_size[1]/2+gap_finger/2,0,0],
-                    [palm_size[1]/2-width/2,0,-(palm_size[0]/2+gap_joint/2)],
-                    [gap_finger/2+width/2,0,-(palm_size[0]/2+gap_joint/2)],
-                    [-gap_finger/2-width/2,0,-(palm_size[0]/2+gap_joint/2)],
-                    [-palm_size[1]/2+width/2,0,-(palm_size[0]/2+gap_joint/2)]];
+                    [palm_size[1]/2-width/2,    0,  -(palm_size[0]/2+gap_joint/2)],
+                    [gap_finger/2+width/2,      0,  -(palm_size[0]/2+gap_joint/2)],
+                    [-gap_finger/2-width/2,     0,  -(palm_size[0]/2+gap_joint/2)],
+                    [-palm_size[1]/2+width/2,   0,  -(palm_size[0]/2+gap_joint/2)]];
 
 var light = new THREE.DirectionalLight(0xffffff);
 light.position.set(0, 300, 0);
@@ -75,12 +79,12 @@ scene.add(light);
 render();
 var time = 0;
 Leap.loop(function (frame) {
-    // var date = new Date();
-    // if (date.getTime() - time > 0) {
-    //     time = date.getTime();
-    //     animate(frame);
-    // }
-    animate(frame);
+    var date = new Date();
+    if (date.getTime() - time > 100) {
+        time = date.getTime();
+        animate(frame);
+    }
+    // animate(frame);
 });
 
 // this function is executed on each animation frame
@@ -107,11 +111,16 @@ function animate(frame){
     palm.rotation.set(palm_rotate.x, palm_rotate.y, palm_rotate.z);
 
     var squence = finger_sequence (hand);
+    console.log(squence);
 
     // TODO: only draw left hand, need to implement right hand
     if (squence[5] == 1)
         return;
     var palm_position = (new THREE.Vector3()).fromArray(hand.palmPosition);
+
+    var ratio0 = 0.5;
+    var ratio1 = 0.5;
+    var zoom = 0.6;
 
     for (var i = 0; i < 5; i ++) {
         if (squence[i] == undefined)
@@ -125,25 +134,30 @@ function animate(frame){
         var phalange_direction = new THREE.Vector3();
         var phalange_norm = new THREE.Vector3();
         var phalange_rotation = new THREE.Vector3();
-        var finger_direction = new THREE.Vector3();
-        var tip = (new THREE.Vector3()).fromArray(finger.tipPosition).sub(palm_position);
+        var finger_direction = new THREE.Vector3().fromArray(finger.direction);
+        var tip = (new THREE.Vector3()).fromArray(finger.tipPosition).sub(palm_position).multiplyScalar(zoom);
 
         rotated_root.add(x_axis.clone().multiplyScalar(finger_root[i][0]));
         rotated_root.sub(y_axis.clone().multiplyScalar(finger_root[i][1]));
-        rotated_root.add(z_axis.clone().multiplyScalar(finger_root[i][2]));
+        rotated_root.sub(z_axis.clone().multiplyScalar(finger_root[i][2]));
 
-        middle_joint = tip.clone().sub((new THREE.Vector3()).fromArray(finger.direction).multiplyScalar(length[i * 2 + 1] / 2));
+        // console.log(rotated_root);
 
-        var position0 = rotated_root.clone().add(middle_joint).multiplyScalar(0.5);
+        middle_joint = tip.clone().sub(finger_direction.clone().multiplyScalar(length[i * 2 + 1] / 2));
+        // console.log(middle_joint);
+
+        var position0 = rotated_root.clone().multiplyScalar(1-ratio0).add(middle_joint.clone().multiplyScalar(ratio0));
         phalanges[i * 2].position.set(position0.x,position0.y,position0.z);
+        // console.log(position0);
 
         phalange_direction = middle_joint.clone().sub(position0);
         phalange_norm = phalange_direction.clone().cross(y_axis.clone().cross(phalange_direction));
         phalange_rotation = rotate_para(phalange_direction, phalange_norm);
         phalanges[i * 2].rotation.set(phalange_rotation.x, phalange_rotation.y, phalange_rotation.z);
 
-        var position1 = rotated_root.clone().add(tip).multiplyScalar(0.5);
+        var position1 = middle_joint.clone().multiplyScalar(1-ratio1).add(tip.clone().multiplyScalar(ratio1));
         phalanges[i * 2 + 1].position.set(position1.x, position1.y, position1.z);
+        // console.log(position1);
 
         phalange_direction = (new THREE.Vector3()).fromArray(finger.direction);
         phalange_norm = phalange_direction.clone().cross(y_axis.clone().cross(phalange_direction));
@@ -180,8 +194,7 @@ function finger_sequence (hand) {
     var min = 99999;
     var squence = new Array(6); // squence[5] = 0: left hand; =1:right hand
 
-    for (var i = 0; i < 5; i ++)
-        squence[i] = i;
+    squence = [4,1,0,2,3];
     squence[5] = 0;
     return squence;
 
