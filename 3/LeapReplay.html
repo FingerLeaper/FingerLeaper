@@ -19,20 +19,23 @@
 
     var info;
     var renderer, scene, camera, controls, stats;
+    var renderer2, scene2, camera2, controls2;
     var reader = new FileReader();
     var FPS = 30;
     var data, palm, fingers = [];
-    var pausedFrame = null;
-    var latestFrame = null;
-    var recordedFrames = [];
+    var data2, palm2, fingers2 = [];
+    var recordedFrames = [], recordedFrames2 = [];
+    var currentFrame, currentFrame2;
     var isReplaying = false, isRecording = false, frameNum = 0;
+    var isReplaying2 = false, isRecording2 = false, frameNum2 = 0;
     var isPaused = false;
 
     init();
     animate();
 
     function init() {
-        var css, light, geometry, material, mesh;
+        var css, geometry, material, mesh;
+        var geometry2, material2, mesh2;
 
         css = document.body.appendChild( document.createElement('style') );
         css.innerHTML = 'body { font: 600 12pt monospace; overflow: hidden; }' +
@@ -40,20 +43,22 @@
             'input, button { font: 600 12pt monospace; }';
 
         info = document.body.appendChild( document.createElement( 'div' ) );
-        info.innerHTML = info.txt = '<h1 style="display: inline;">Leap Motion Recorder & Replayer</h1><br>' +
-            'Read data: <input type=file onchange="readFile(this)"  > ' +
+        info.innerHTML = info.txt = '<h1 style="display: inline;">Leap Motion Recorder & Replayer</h1>' +
+            '<br>Read Data: <input type=file onchange="readFile(this)"  > ' +
             '<button onclick="toggleReplay();" >Toggle Replay</button> - ' +
             '<button onclick="toggleRecording();" >Toggle Recording</button>' +
             '<button onclick="recordedFrames = [];"; >Clear data</button> - ' +
-            '<button onclick=saveFile() >Save Data to File</button>';
+            '<button onclick=saveFile() >Save Data to File</button>' +
+            '<br>Read Data2: <input type=file onchange="readFile2(this)"  > ' +
+            '<button onclick="toggleReplay2();" >Toggle Replay</button> - ' +
+            '<button onclick="toggleRecording2();" >Toggle Recording</button>' +
+            '<button onclick="recordedFrames2 = [];"; >Clear data</button> - ' +
+            '<button onclick=saveFile() >Save Data2 to File</button>' +
 
         textareaOutput = document.body.appendChild( document.createElement( 'textarea' ) );
         textareaOutput.style.cssText = 'display: block; font-size:small; width: ' +  0.98 * window.innerWidth + 'px; ';
         textareaOutput.rows =  2;
         textareaOutput.value = '';
-
-        textarea = document.body.appendChild( document.createElement( 'textarea' ) );
-        textarea.style.cssText = 'height: ' + (window.innerHeight - 120) + 'px; width: ' +  0.49 * window.innerWidth + 'px; ';
 
         stats = new Stats();
         stats.domElement.style.cssText = 'position: absolute; right: 0; top: 0px; zIndex: 100; ';
@@ -95,6 +100,45 @@
             scene.add( mesh );
             fingers.push( mesh );
         }
+
+//
+
+        renderer2 = new THREE.WebGLRenderer( { antialias: true }  );
+        renderer2.setSize( 0.49 * window.innerWidth, window.innerHeight - 120 );
+        renderer2.domElement.style.cssText = 'outline: 1px solid #000;';
+        document.body.appendChild( renderer2.domElement );
+        scene2 = new THREE.Scene();
+
+        camera2 = new THREE.PerspectiveCamera( 40, (0.45 * window.innerWidth) / (window.innerHeight - 150) , 1, 5000 );
+        camera2.position.set( 0, 500, 500 );
+        controls2 = new THREE.TrackballControls( camera2, renderer2.domElement );
+
+        geometry2 = new THREE.AxisHelper( 80 );
+        scene2.add( geometry2 );
+
+        geometry2 = new THREE.PlaneGeometry( 600, 600, 1, 1 );
+        geometry2.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
+        material2 = new THREE.MeshBasicMaterial( {color: Math.random() * 0xffffff, side: THREE.DoubleSide } );
+        mesh2 = new THREE.Mesh( geometry2, material2 );
+        mesh2.position.set( 0, -100, 0 );
+        scene2.add( mesh2 );
+
+        geometry2 = new THREE.CubeGeometry( 100, 20, 80 );
+        material2 = new THREE.MeshNormalMaterial();
+        palm2 = new THREE.Mesh( geometry2, material2 );
+        palm2.castShadow = true;
+        palm2.receiveShadow = true;
+        scene2.add( palm2 );
+
+        geometry2 = new THREE.CubeGeometry( 16, 12, 20 );
+        material2 = new THREE.MeshNormalMaterial();
+        for (var j = 0; j < 5; j++) {
+            mesh2 = new THREE.Mesh( geometry2, material2 );
+            mesh2.castShadow = true;
+            mesh2.receiveShadow = true;
+            scene2.add( mesh2 );
+            fingers2.push( mesh2 );
+        }
     }
 
     function saveFile() {
@@ -107,7 +151,7 @@
         if ( that.files && that.files[0]){
             var reader = new FileReader();
             reader.onload = function (e) {
-                recordedFrames = Base64.btou(RawDeflate.inflate(Base64.fromBase64(e.target.result)));
+                recordedFrames = JSON.parse(Base64.btou(RawDeflate.inflate(Base64.fromBase64(e.target.result))));
             };
             reader.readAsText(that.files[0]);
         }
@@ -115,15 +159,19 @@
 
     Leap.loop( function( frame ) {
         if (!isPaused) {
-            currentFrame = frame;
+            currentFrame = tr(frame);
         }
     });
 
     setInterval(playFrame, 1/FPS);
 
-    function playFrame(frame) {
+    function playFrame() {
+        if (!currentFrame) {
+            return;
+        }
         if (isReplaying) {
-            playLoop(recordedFrames[frameNum]);
+            playLoop(currentFrame, palm2, fingers2);
+            playLoop(recordedFrames[frameNum], palm, fingers);
             if (!isPaused) {
                 frameNum++;
             }
@@ -133,9 +181,38 @@
             return;
         }
         if (isRecording) {
-            recordedFrames.push({"hands":currentFrame.data.hands, "pointables":currentFrame.data.pointables});
+            recordedFrames.push(tr(currentFrame));
         }
-        playLoop(currentFrame);
+        playLoop(currentFrame, palm, fingers);
+        playLoop(currentFrame, palm2, fingers2);
+    }
+
+    function tr(frame) {
+        // return {"hands":frame.data.hands, "pointables":frame.data.pointables};
+        tr_frame = {
+            "hands": [],
+            "pointables": []
+        };
+        var handDir = v(0,0,-1);
+        if (frame.hands.length > 0) {
+            var d = frame.hands[0].direction;
+            handDir = v(d[0], d[1], d[2]);
+        }
+        for (var i = 0; i < frame.hands.length; i++) {
+            tr_frame.hands.push({
+                'stabilizedPalmPosition':normVec(frame.hands[0].stabilizedPalmPosition, handDir),
+                'direction':[0,0,-1],
+                'palmNormal':normVec(frame.hands[0].palmNormal, handDir)
+            });
+        }
+        for (var i = 0; i < frame.pointables.length; i++) {
+            tr_frame.pointables.push({
+                'direction':normVec(frame.pointables[i].direction, handDir),
+                'stabilizedTipPosition':normVec(frame.pointables[i].stabilizedTipPosition, handDir),
+                'length':frame.pointables[i].length
+            });
+        }
+        return tr_frame;
     }
 
     function toggleReplay() {
@@ -151,7 +228,7 @@
     // Press spacebar to toggle pause
     window.onkeypress = function(e) {
         if (e.charCode == 32) {
-            if (!isRecording) {
+            if (!isRecording && !isRecording2) {
                 isPaused = !isPaused;
                 textareaOutput.value = isPaused ? 'Paused':'';
             }
@@ -166,7 +243,21 @@
         }
     }
 
-    function playLoop( frame ) {
+    function normVec(vec, handDir) {
+        // Rotate a vector to eliminate the effect of different hand direction
+        // Hand direction will be fixed at (0,0,-1)
+        var vec3 = v(vec[0], vec[1], vec[2]);
+        var n = v(0,0,-1);
+        var a = new THREE.Vector3();
+        a.crossVectors(handDir, n); // a = handDir x n
+        a.normalize();
+        if (a.length() > 0) {
+            vec3.applyAxisAngle(a, handDir.angleTo(n));
+        }
+        return [vec3.x,vec3.y,vec3.z];
+    }
+
+    function playLoop( frame, palm, fingers ) {
         var hand, direction, len, finger, pointable;
         if ( frame.hands.length > 0) {
             hand = frame.hands[0];
@@ -212,12 +303,18 @@
         return dist;
     }
 
-    function sq(x) {return x*x};
+    function DTW() {}
+
+    function sq(x) {
+        return x*x;
+    }
 
     function animate() {
         requestAnimationFrame( animate );
         controls.update();
         renderer.render( scene, camera );
+        controls2.update();
+        renderer2.render( scene2, camera2 );
         stats.update();
     }
 
