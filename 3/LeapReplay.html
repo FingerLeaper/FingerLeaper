@@ -101,7 +101,7 @@
             fingers.push( mesh );
         }
 
-//
+        // Render2
 
         renderer2 = new THREE.WebGLRenderer( { antialias: true }  );
         renderer2.setSize( 0.49 * window.innerWidth, window.innerHeight - 120 );
@@ -196,12 +196,11 @@
         var handDir = v(0,0,-1);
         if (frame.hands.length > 0) {
             var d = frame.hands[0].direction;
-            handDir = v(d[0], d[1], d[2]);
+            handDir = vv(d);
         }
         for (var i = 0; i < frame.hands.length; i++) {
             tr_frame.hands.push({
                 'stabilizedPalmPosition':normVec(frame.hands[0].stabilizedPalmPosition, handDir),
-                'direction':[0,0,-1],
                 'palmNormal':normVec(frame.hands[0].palmNormal, handDir)
             });
         }
@@ -212,6 +211,7 @@
                 'length':frame.pointables[i].length
             });
         }
+        tr_frame.pointables.sort(sortPointable);
         return tr_frame;
     }
 
@@ -223,6 +223,16 @@
         frameNum = 0;
         isReplaying = !isReplaying;
         textareaOutput.value = isReplaying ? 'Replaying...':'';
+    }
+
+    function toggleReplay2() {
+        if (recordedFrames2.length == 0) {
+            textareaOutput.value = 'No recorded frames.';
+            return;
+        }
+        frameNum = 0;
+        isReplaying2 = !isReplaying2;
+        textareaOutput.value = isReplaying2 ? 'Replaying 2...':'';
     }
 
     // Press spacebar to toggle pause
@@ -246,7 +256,7 @@
     function normVec(vec, handDir) {
         // Rotate a vector to eliminate the effect of different hand direction
         // Hand direction will be fixed at (0,0,-1)
-        var vec3 = v(vec[0], vec[1], vec[2]);
+        var vec3 = vv(vec);
         var n = v(0,0,-1);
         var a = new THREE.Vector3();
         a.crossVectors(handDir, n); // a = handDir x n
@@ -262,7 +272,7 @@
         if ( frame.hands.length > 0) {
             hand = frame.hands[0];
             palm.position.set( hand.stabilizedPalmPosition[0], hand.stabilizedPalmPosition[1], hand.stabilizedPalmPosition[2] );
-            direction = v( hand.direction[0], hand.direction[1], hand.direction[2] );  // best so far
+            direction = v(0,0,-1);
             palm.lookAt( direction.add( palm.position ) );
             roll = Math.atan2( hand.palmNormal[0], hand.palmNormal[1] );
             palm.rotation.z = roll;
@@ -279,7 +289,7 @@
                 if ( i < len ) {
                     pointable = frame.pointables[i];
                     finger.position.set( pointable.stabilizedTipPosition[0], pointable.stabilizedTipPosition[1], pointable.stabilizedTipPosition[2] );
-                    direction = v( pointable.direction[0], pointable.direction[1], pointable.direction[2]);  // best so far
+                    direction = vv(pointable.direction);  // best so far
                     finger.lookAt( direction.add( finger.position ) );
                     finger.scale.z = 0.05 * pointable.length;
                     finger.visible = true;
@@ -298,9 +308,21 @@
     function distance(frame1, frame2) {
         dist = 0;
         for (var i = 0; i < 5; i++) {
-            dist += Math.sqrt(1-sq(vec(frame1.pointables[i].direction).dot(vec(frame2.pointables[i].direction))));
+            dist += Math.sqrt(1-sq(vv(frame1.pointables[i].direction).dot(vv(frame2.pointables[i].direction))));
         }
-        return dist;
+        return dist/5;
+    }
+
+    function similarity(frame1, frame2) {
+        dist = 0;
+        for (var i = 0; i < 5; i++) {
+            dist += vv(frame1.pointables[i].direction).dot(vv(frame2.pointables[i].direction));
+        }
+        return dist/5;
+    }
+
+    function sortPointable(p1, p2) {
+        return p1.stabilizedTipPosition[0] - p2.stabilizedTipPosition[0];
     }
 
     function DTW() {}
@@ -319,7 +341,7 @@
     }
 
     function v( x, y, z ){ return new THREE.Vector3( x, y, z ); }
-    function vec(v) {
+    function vv(v) {
         return new THREE.Vector3(v[0], v[1], v[2]);
     }
 </script>
