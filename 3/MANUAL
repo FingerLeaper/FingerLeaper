@@ -1,0 +1,2 @@
+UTF-8 encoding
+先Read data，加载exercise.data；再Read data 2，加载exercise2.data，按Toggle Replay可看对比播放，文本框中为两个录像中各手指夹角余弦的平均值。

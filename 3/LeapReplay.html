@@ -15,7 +15,6 @@
 <script src="rawinflate.js"></script>
 <script src="rawdeflate.js"></script>
 <script>
-// copyright (c) 2013 jaanga authors ~ mit license
 
     var info;
     var renderer, scene, camera, controls, stats;
@@ -26,8 +25,8 @@
     var data2, palm2, fingers2 = [];
     var recordedFrames = [], recordedFrames2 = [];
     var currentFrame, currentFrame2;
+    var isExercise = false;
     var isReplaying = false, isRecording = false, frameNum = 0;
-    var isReplaying2 = false, isRecording2 = false, frameNum2 = 0;
     var isPaused = false;
 
     init();
@@ -44,16 +43,15 @@
 
         info = document.body.appendChild( document.createElement( 'div' ) );
         info.innerHTML = info.txt = '<h1 style="display: inline;">Leap Motion Recorder & Replayer</h1>' +
-            '<br>Read Data: <input type=file onchange="readFile(this)"  > ' +
+            '<br>Read Data: <input type=file onchange="readFile(this)"> ' +
             '<button onclick="toggleReplay();" >Toggle Replay</button> - ' +
             '<button onclick="toggleRecording();" >Toggle Recording</button>' +
             '<button onclick="recordedFrames = [];"; >Clear data</button> - ' +
             '<button onclick=saveFile() >Save Data to File</button>' +
             '<br>Read Data2: <input type=file onchange="readFile2(this)"  > ' +
-            '<button onclick="toggleReplay2();" >Toggle Replay</button> - ' +
-            '<button onclick="toggleRecording2();" >Toggle Recording</button>' +
+            '<button onclick="exercise();" >Toggle Exercise</button> - ' +
             '<button onclick="recordedFrames2 = [];"; >Clear data</button> - ' +
-            '<button onclick=saveFile() >Save Data2 to File</button>' +
+            '<button onclick=saveFile2() >Save Data2 to File</button>';
 
         textareaOutput = document.body.appendChild( document.createElement( 'textarea' ) );
         textareaOutput.style.cssText = 'display: block; font-size:small; width: ' +  0.98 * window.innerWidth + 'px; ';
@@ -147,6 +145,12 @@
         saveAs(blob, 'leapmotion.data');
     }
 
+    function saveFile2() {
+        var out = Base64.toBase64(RawDeflate.deflate(Base64.utob(JSON.stringify(recordedFrames2))));
+        var blob = new Blob( [ out ] , {type: "text/plain;charset=utf-8"} );
+        saveAs(blob, 'leapmotion.data');
+    }
+
     function readFile(that){
         if ( that.files && that.files[0]){
             var reader = new FileReader();
@@ -157,20 +161,47 @@
         }
     }
 
+    function readFile2(that){
+        if ( that.files && that.files[0]){
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                recordedFrames2 = JSON.parse(Base64.btou(RawDeflate.inflate(Base64.fromBase64(e.target.result))));
+            };
+            reader.readAsText(that.files[0]);
+        }
+    }
+
     Leap.loop( function( frame ) {
         if (!isPaused) {
-            currentFrame = tr(frame);
+            currentFrame = frame;
         }
     });
 
-    setInterval(playFrame, 1/FPS);
+    setInterval(playFrame, 1000/FPS);
 
     function playFrame() {
         if (!currentFrame) {
             return;
         }
-        if (isReplaying) {
+        if (isExercise) {
             playLoop(currentFrame, palm2, fingers2);
+            playLoop(recordedFrames[frameNum], palm, fingers);
+            if (!isPaused) {
+                frameNum++;
+                recordedFrames2.push(tr(currentFrame));
+            }
+            if (frameNum >= recordedFrames.length) {
+                isExercise = false;
+            }
+            return;
+        }
+        if (isReplaying) {
+            if (frameNum < recordedFrames2.length) {
+                playLoop(recordedFrames2[frameNum], palm2, fingers2);
+                puts(similarity(recordedFrames[frameNum], recordedFrames2[frameNum]));
+            } else {
+                playLoop(currentFrame, palm2, fingers2);
+            }
             playLoop(recordedFrames[frameNum], palm, fingers);
             if (!isPaused) {
                 frameNum++;
@@ -185,6 +216,23 @@
         }
         playLoop(currentFrame, palm, fingers);
         playLoop(currentFrame, palm2, fingers2);
+    }
+
+    function similarities() {
+        var s = [];
+        for (var i = 0; i < recordedFrames.length && i < recordedFrames2.length; i++) {
+            s.push(similarity(recordedFrames[i], recordedFrames2[i]));
+        }
+        return s;
+    }
+
+    function DTWSimilarities() {
+        var s = [];
+        var k = 0;
+        var d = 5; // Maximum frame variance
+        for (var i = 0; i < recordedFrames2.length; i++) {
+            // to be implemented
+        }
     }
 
     function tr(frame) {
@@ -215,6 +263,10 @@
         return tr_frame;
     }
 
+    function puts(str) {
+        textareaOutput.value = str;
+    }
+
     function toggleReplay() {
         if (recordedFrames.length == 0) {
             textareaOutput.value = 'No recorded frames.';
@@ -225,20 +277,10 @@
         textareaOutput.value = isReplaying ? 'Replaying...':'';
     }
 
-    function toggleReplay2() {
-        if (recordedFrames2.length == 0) {
-            textareaOutput.value = 'No recorded frames.';
-            return;
-        }
-        frameNum = 0;
-        isReplaying2 = !isReplaying2;
-        textareaOutput.value = isReplaying2 ? 'Replaying 2...':'';
-    }
-
     // Press spacebar to toggle pause
     window.onkeypress = function(e) {
         if (e.charCode == 32) {
-            if (!isRecording && !isRecording2) {
+            if (!isRecording && !isExercise) {
                 isPaused = !isPaused;
                 textareaOutput.value = isPaused ? 'Paused':'';
             }
@@ -323,6 +365,16 @@
 
     function sortPointable(p1, p2) {
         return p1.stabilizedTipPosition[0] - p2.stabilizedTipPosition[0];
+    }
+
+    function exercise() {
+        if (recordedFrames.length > 0) {
+            recordedFrames2 = [];
+            frameNum = 0;
+            isExercise = true;
+        } else {
+            textareaOutput.value = 'No recorded frames';
+        }
     }
 
     function DTW() {}
