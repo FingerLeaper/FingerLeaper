@@ -1,0 +1,135 @@
+<html>
+<head>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="http://js.leapmotion.com/0.2.2/leap.min.js"></script>
+<script src="contentflow.js"></script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<script tyle="text/javascript">
+
+var cf = new ContentFlow('contentFlow', {reflectionColor: "#000000"});
+
+$(document).ready(function() {
+
+	// debug use
+	$('#toggle1').click(function () {
+		$('.contentFlow').fadeToggle();
+	})
+	$('#toggle2').click(function () {
+		$('.waiting').fadeToggle();
+	})
+	$('#toggle3').click(function () {
+		$('.finish').fadeToggle();
+	})
+	$('#toggle4').click(function () {
+		$('.countdown').fadeToggle();
+	})
+
+
+	var ctl = new Leap.Controller({enableGestures: true});
+
+	var swiper = ctl.gesture('swipe');
+
+	var totalDistance = 0;
+
+	var tolerance = 10;
+	var cooloff = 50;
+
+	var slider = _.debounce(function(xDir) {
+	if (xDir == 1)
+		cf.moveTo('pre');
+	else if (xDir == -1) 
+		cf.moveTo('next');
+	// if (xDir == -1) cf.moveTo('pre');
+	// else if (xDir == 1) cf.moveTo('next');
+	}, cooloff);
+
+	swiper.update(function(g) {
+	if (Math.abs(g.translation()[0]) > tolerance || Math.abs(g.translation()[1]) > tolerance) {
+		var xDir = Math.abs(g.translation()[0]) > tolerance ? (g.translation()[0] > 0 ? -1 : 1) : 0;slider(xDir);
+	}
+	});
+
+	ctl.connect();
+
+})
+</script>
+</head>
+<body>
+	<!-- debug use -->
+	<button id='toggle1'>Toggle1</button>
+	<button id='toggle2'>Toggle2</button>
+	<button id='toggle3'>Toggle3</button>
+	<button id='toggle4'>Toggle4</button>
+
+    <!-- ===== FLOW ===== -->
+    <div id="contentFlow" class="ContentFlow">
+        <!-- should be place before flow so that contained images will be loaded first -->
+        <div class="loadIndicator"><div class="indicator"></div></div>
+
+        <div class="flow">
+            <div class="item">
+                <img class="content" src="img/app1.png"/>
+                <!-- <div class="caption">pic1: some flowers</div> -->
+            </div>
+            <div class="item">
+                <img class="content" src="img/app2.png"/>
+                <!-- <div class="caption">pic2: some flowers</div> -->
+            </div>
+            <div class="item">
+                <img class="content" src="img/app3.png"/>
+                <!-- <div class="caption">pic3: some flowers</div> -->
+            </div>
+            <div class="item">
+                <img class="content" src="img/app1.png"/>
+                <!-- <div class="caption">pic4: some flowers</div> -->
+            </div>
+            <div class="item">
+                <img class="content" src="img/app2.png"/>
+                <!-- <div class="caption">pic5: some flowers</div> -->
+            </div>
+            <div class="item">
+                <img class="content" src="img/app3.png"/>
+                <!-- <div class="caption">pic6: some flowers</div> -->
+            </div>
+        </div>
+        <div class="globalCaption"></div>
+        <div class="scrollbar">
+            <div class="slider"><div class="position"></div></div>
+        </div>
+    </div>
+
+    <!-- Waiting Page -->
+    <div class="waiting">
+    <div >Please Put Your Hand in the Valid Area.</div>
+    <div class="buttons">
+      <div class="button restart">
+        <img src="img/restart.png">
+      </div>
+      <div class="button menu">
+        <img src="img/menu.png">
+      </div>
+    </div>
+    <div class="valid_area">
+      <img src="img/valid_area.png">
+    </div>
+  </div>
+  
+  <!-- Finish Page -->
+  <div class="finish">
+    <div class="score"></div>
+    <div class="buttons">
+      <div class="button restart"><img src="img/restart.png"></div>
+      <div class="button next"><img src="img/next.png"></div>
+      <div class="button menu"><img src="img/menu.png"></div>
+    </div>
+  </div>
+  
+  <!-- Count Down Page -->
+  <div class="countdown">
+    <div class="time_left">There is 1s left...</div>
+  </div>
+</body>
+<script src="js/main.js"></script>
+</html>

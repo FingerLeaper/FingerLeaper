@@ -1,0 +1,53 @@
+body {
+    text-align: center;
+}
+
+.ContentFlow {
+    -webkit-border-radius: 13px;
+    -moz-border-radius: 13px;
+    border-radius: 13px;
+    -webkit-box-shadow: 0px 0px 50px #000000;
+    -moz-box-shadow: 0px 0px 50px #000000;
+    box-shadow: 0px 0px 50px #000000;
+    background-image: -moz-linear-gradient(top, #000000, #696969 61%);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0.00, #000000), color-stop(0.61, #696969));
+    padding: 49px;
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 12pt;
+    color: #888888;
+    text-align: center;
+}
+
+.waiting {
+    -webkit-border-radius: 13px;
+    -moz-border-radius: 13px;
+    border-radius: 13px;
+    -webkit-box-shadow: 0px 0px 50px #000000;
+    -moz-box-shadow: 0px 0px 50px #000000;
+    box-shadow: 0px 0px 50px #000000;
+    background-image: -moz-linear-gradient(top, #000000, #696969 61%);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0.00, #000000), color-stop(0.61, #696969));
+    padding: 49px;
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 12pt;
+    color: #888888;
+    text-align: center;
+}
+/*
+.exercises {
+    text-align: center;
+}
+
+.exercise {
+    display: inline;
+}*/
+
+.buttons {
+    display: inline;
+}
+
+.button {
+    margin: 1%;
+    display: inline;
+    float: center;
+}
