@@ -32,11 +32,13 @@ function step(frame) {
         // right swipe to focus on the previous app
         case 4:
             cur_app_focus --;
+            cf.moveTo(cur_app_focus);
             break;
 
         // left swipe to focus on the next app
         case 3:
             cur_app_focus ++;
+            cf.moveTo(cur_app_focus);
             break;
 
         // key tap to select one app
@@ -44,8 +46,9 @@ function step(frame) {
             current_schedule = 0;
             user_performance = [];
             app_length = cur_app_length;
-            setup_scene();
+            // setup_scene();
             sys_status = 1;
+            
             break;
         default:
             break;
@@ -145,6 +148,7 @@ function restart() {
     app_status = 2;
     user_performance = null;
     current_schedule = 0;
+
 }
 
 // back to exercise stage and continue
