@@ -34,20 +34,25 @@ $(document).ready(function() {
 	var totalDistance = 0;
 
 	var tolerance = 10;
-	var cooloff = 50;
+	var cooloff = 100;
 
 	var slider = _.debounce(function(xDir) {
-	if (xDir == 1)
-		cf.moveTo('pre');
-	else if (xDir == -1) 
-		cf.moveTo('next');
-	// if (xDir == -1) cf.moveTo('pre');
-	// else if (xDir == 1) cf.moveTo('next');
+  	if (xDir == 1) {
+      console.log(xDir);
+  		cf.moveTo('pre');
+    }
+  	else if (xDir == -1) {
+      console.log(xDir);
+  		cf.moveTo('next');
+    }
+  	// if (xDir == -1) cf.moveTo('pre');
+  	// else if (xDir == 1) cf.moveTo('next');
 	}, cooloff);
 
 	swiper.update(function(g) {
 	if (Math.abs(g.translation()[0]) > tolerance || Math.abs(g.translation()[1]) > tolerance) {
-		var xDir = Math.abs(g.translation()[0]) > tolerance ? (g.translation()[0] > 0 ? -1 : 1) : 0;slider(xDir);
+		var xDir = Math.abs(g.translation()[0]) > tolerance ? (g.translation()[0] > 0 ? -1 : 1) : 0;
+    slider(xDir);
 	}
 	});
 
@@ -115,7 +120,7 @@ $(document).ready(function() {
       <img src="img/valid_area.png">
     </div>
   </div>
-  
+
   <!-- Finish Page -->
   <div class="finish">
     <div class="score"></div>
@@ -125,7 +130,7 @@ $(document).ready(function() {
       <div class="button menu"><img src="img/menu.png"></div>
     </div>
   </div>
-  
+
   <!-- Count Down Page -->
   <div class="countdown">
     <div class="time_left">There is 1s left...</div>

@@ -28,6 +28,7 @@
     var isExercise = false;
     var isReplaying = false, isRecording = false, frameNum = 0;
     var isPaused = false;
+    var beforeDTW = [], afterDTW = [];
 
     init();
     animate();
@@ -51,7 +52,9 @@
             '<br>Read Data2: <input type=file onchange="readFile2(this)"  > ' +
             '<button onclick="exercise();" >Toggle Exercise</button> - ' +
             '<button onclick="recordedFrames2 = [];"; >Clear data</button> - ' +
-            '<button onclick=saveFile2() >Save Data2 to File</button>';
+            '<button onclick=saveFile2() >Save Data2 to File</button>' +
+            '<br><button onclick="applyDTW();" >Apply DTW</button> - ' +
+            '<button onclick="cancelDTW();" >Cancel DTW</button>';
 
         textareaOutput = document.body.appendChild( document.createElement( 'textarea' ) );
         textareaOutput.style.cssText = 'display: block; font-size:small; width: ' +  0.98 * window.innerWidth + 'px; ';
@@ -198,7 +201,7 @@
         if (isReplaying) {
             if (frameNum < recordedFrames2.length) {
                 playLoop(recordedFrames2[frameNum], palm2, fingers2);
-                puts(similarity(recordedFrames[frameNum], recordedFrames2[frameNum]));
+                puts(distance(recordedFrames[frameNum], recordedFrames2[frameNum]));
             } else {
                 playLoop(currentFrame, palm2, fingers2);
             }
@@ -224,15 +227,6 @@
             s.push(similarity(recordedFrames[i], recordedFrames2[i]));
         }
         return s;
-    }
-
-    function DTWSimilarities() {
-        var s = [];
-        var k = 0;
-        var d = 5; // Maximum frame variance
-        for (var i = 0; i < recordedFrames2.length; i++) {
-            // to be implemented
-        }
     }
 
     function tr(frame) {
@@ -350,7 +344,7 @@
     function distance(frame1, frame2) {
         dist = 0;
         for (var i = 0; i < 5; i++) {
-            dist += Math.sqrt(1-sq(vv(frame1.pointables[i].direction).dot(vv(frame2.pointables[i].direction))));
+            dist += Math.sqrt(1-min(1,sq(vv(frame1.pointables[i].direction).dot(vv(frame2.pointables[i].direction)))));
         }
         return dist/5;
     }
@@ -377,7 +371,77 @@
         }
     }
 
-    function DTW() {}
+    function max(a,b) {return a>b?a:b;}
+    function min(a,b) {return a>b?b:a;}
+
+    Array.prototype.max = function() {
+      return Math.max.apply(null, this);
+    };
+
+    Array.prototype.min = function() {
+      return Math.min.apply(null, this);
+    };
+
+    Array.prototype.maxpos = function() {
+      return this.indexOf(this.max());
+    };
+
+    Array.prototype.minpos = function() {
+      return this.indexOf(this.min());
+    };
+
+    function DTW(arr1, arr2) {
+        var dist = [], pos = [], pair = [];
+        var n = arr1.length, m = arr2.length;
+        var l = 10;
+        var t = 2;
+        for (var i = 0; i <= n; i++) {
+            dist[i] = [];
+            pos[i] = [];
+            for (var j = 0; j <= m; j++) {
+                dist[i][j] = 100*max(n,m); // A big enough number
+            }
+        }
+        for (var i = 1; i <= n; i++) {
+            for (var j = max(1,i-l); j <= min(m,i+l) ; j++) {
+                if (i == 1) {
+                    dist[i][j] = 0;
+                } else {
+                    dist[i][j] = dist[i-1].slice([1,i-l,j-t].max(),j).min();
+                    pos[i][j] = dist[i-1].slice([1,i-l,j-t].max(),j).minpos() + [1,i-l,j-t].max();
+                }
+            }
+            for (var j = max(1,i-l); j <= min(m,i+l) ; j++) {
+                dist[i][j] += distance(arr1[i-1], arr2[j-1]);
+            }
+        }
+        j = m;
+        for (var i = n-1; i >= 0; i--) {
+            pair[i] = j-1;
+            j = pos[i+1][j];
+        }
+        return pair;
+    }
+
+    function applyDTW() {
+        if (recordedFrames2.length == 0) return;
+        if (afterDTW.length == 0) {
+            beforeDTW = recordedFrames2;
+            var pair = DTW(recordedFrames, recordedFrames2);
+            for (var i = 0; i < recordedFrames2.length; i++) {
+                afterDTW[i] = recordedFrames2[pair[i]];
+            }
+        }
+        recordedFrames2 = afterDTW;
+    }
+
+    function cancelDTW() {
+        if (beforeDTW.length == 0) {
+            return;
+        } else {
+            recordedFrames2 = beforeDTW;
+        }
+    }
 
     function sq(x) {
         return x*x;
