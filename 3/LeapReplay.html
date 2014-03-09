@@ -23,6 +23,7 @@
     var FPS = 30;
     var data, palm, fingers = [];
     var data2, palm2, fingers2 = [];
+    var hand, hand2;
     var recordedFrames = [], recordedFrames2 = [];
     var currentFrame, currentFrame2;
     var isExercise = false;
@@ -72,35 +73,61 @@
         scene = new THREE.Scene();
 
         camera = new THREE.PerspectiveCamera( 40, (0.45 * window.innerWidth) / (window.innerHeight - 150) , 1, 5000 );
-        camera.position.set( 0, 500, 500 );
+        camera.position.set(-1,40,0);
         controls = new THREE.TrackballControls( camera, renderer.domElement );
 
         geometry = new THREE.AxisHelper( 80 );
         scene.add( geometry );
 
-        geometry = new THREE.PlaneGeometry( 600, 600, 1, 1 );
+        geometry = new THREE.PlaneGeometry( 60, 60, 1, 1 );
         geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
         material = new THREE.MeshBasicMaterial( {color: Math.random() * 0xffffff, side: THREE.DoubleSide } );
         mesh = new THREE.Mesh( geometry, material );
-        mesh.position.set( 0, -100, 0 );
+        mesh.position.set( 0, -20, 0 );
         scene.add( mesh );
 
-        geometry = new THREE.CubeGeometry( 100, 20, 80 );
-        material = new THREE.MeshNormalMaterial();
-        palm = new THREE.Mesh( geometry, material );
-        palm.castShadow = true;
-        palm.receiveShadow = true;
-        scene.add( palm );
+        // geometry = new THREE.CubeGeometry( 100, 20, 80 );
+        // material = new THREE.MeshNormalMaterial();
+        // palm = new THREE.Mesh( geometry, material );
+        // palm.castShadow = true;
+        // palm.receiveShadow = true;
+        // scene.add( palm );
 
-        geometry = new THREE.CubeGeometry( 16, 12, 20 );
-        material = new THREE.MeshNormalMaterial();
-        for (var j = 0; j < 5; j++) {
-            mesh = new THREE.Mesh( geometry, material );
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            scene.add( mesh );
-            fingers.push( mesh );
-        }
+        // geometry = new THREE.CubeGeometry( 16, 12, 20 );
+        // material = new THREE.MeshNormalMaterial();
+        // for (var j = 0; j < 5; j++) {
+        //     mesh = new THREE.Mesh( geometry, material );
+        //     mesh.castShadow = true;
+        //     mesh.receiveShadow = true;
+        //     scene.add( mesh );
+        //     fingers.push( mesh );
+        // }
+
+        var loader = new THREE.JSONLoader();
+
+        // Load model
+        loader.load('js/models/hand_rig.js', function (geometry, materials) {
+            var material;
+
+            hand = new THREE.SkinnedMesh(
+                geometry,
+                new THREE.MeshFaceMaterial(materials)
+            );
+
+            material = hand.material.materials;
+
+            for (var i = 0; i < materials.length; i++) {
+                var mat = materials[i];
+                mat.skinning = true;
+            }
+
+            hand.castShadow = true;
+            hand.receiveShadow = true;
+
+            scene.add(hand);
+            hand.lookAt(v(0,0,-1))
+
+        });
 
         // Render2
 
@@ -111,35 +138,54 @@
         scene2 = new THREE.Scene();
 
         camera2 = new THREE.PerspectiveCamera( 40, (0.45 * window.innerWidth) / (window.innerHeight - 150) , 1, 5000 );
-        camera2.position.set( 0, 500, 500 );
+        camera2.position.set(-1,40,0);
         controls2 = new THREE.TrackballControls( camera2, renderer2.domElement );
 
-        geometry2 = new THREE.AxisHelper( 80 );
-        scene2.add( geometry2 );
+        loader.load('js/models/hand_rig.js', function (geometry, materials) {
+            var material;
 
-        geometry2 = new THREE.PlaneGeometry( 600, 600, 1, 1 );
+            hand2 = new THREE.SkinnedMesh(
+                geometry,
+                new THREE.MeshFaceMaterial(materials)
+            );
+
+            material = hand2.material.materials;
+
+            for (var i = 0; i < materials.length; i++) {
+                var mat = materials[i];
+                mat.skinning = true;
+            }
+
+            hand2.castShadow = true;
+            hand2.receiveShadow = true;
+
+            scene2.add(hand2);
+            hand2.lookAt(v(0,0,-1))
+        });
+
+        geometry2 = new THREE.PlaneGeometry( 60, 60, 1, 1 );
         geometry2.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
         material2 = new THREE.MeshBasicMaterial( {color: Math.random() * 0xffffff, side: THREE.DoubleSide } );
         mesh2 = new THREE.Mesh( geometry2, material2 );
-        mesh2.position.set( 0, -100, 0 );
+        mesh2.position.set( 0, -20, 0 );
         scene2.add( mesh2 );
 
-        geometry2 = new THREE.CubeGeometry( 100, 20, 80 );
-        material2 = new THREE.MeshNormalMaterial();
-        palm2 = new THREE.Mesh( geometry2, material2 );
-        palm2.castShadow = true;
-        palm2.receiveShadow = true;
-        scene2.add( palm2 );
+        // geometry2 = new THREE.CubeGeometry( 100, 20, 80 );
+        // material2 = new THREE.MeshNormalMaterial();
+        // palm2 = new THREE.Mesh( geometry2, material2 );
+        // palm2.castShadow = true;
+        // palm2.receiveShadow = true;
+        // scene2.add( palm2 );
 
-        geometry2 = new THREE.CubeGeometry( 16, 12, 20 );
-        material2 = new THREE.MeshNormalMaterial();
-        for (var j = 0; j < 5; j++) {
-            mesh2 = new THREE.Mesh( geometry2, material2 );
-            mesh2.castShadow = true;
-            mesh2.receiveShadow = true;
-            scene2.add( mesh2 );
-            fingers2.push( mesh2 );
-        }
+        // geometry2 = new THREE.CubeGeometry( 16, 12, 20 );
+        // material2 = new THREE.MeshNormalMaterial();
+        // for (var j = 0; j < 5; j++) {
+        //     mesh2 = new THREE.Mesh( geometry2, material2 );
+        //     mesh2.castShadow = true;
+        //     mesh2.receiveShadow = true;
+        //     scene2.add( mesh2 );
+        //     fingers2.push( mesh2 );
+        // }
     }
 
     function saveFile() {
@@ -187,8 +233,8 @@
             return;
         }
         if (isExercise) {
-            playLoop(currentFrame, palm2, fingers2);
-            playLoop(recordedFrames[frameNum], palm, fingers);
+            playLoop(tr(currentFrame), hand2);
+            playLoop(recordedFrames[frameNum], hand);
             if (!isPaused) {
                 frameNum++;
                 recordedFrames2.push(tr(currentFrame));
@@ -200,12 +246,12 @@
         }
         if (isReplaying) {
             if (frameNum < recordedFrames2.length) {
-                playLoop(recordedFrames2[frameNum], palm2, fingers2);
+                playLoop(recordedFrames2[frameNum], hand2);
                 puts(distance(recordedFrames[frameNum], recordedFrames2[frameNum]));
             } else {
-                playLoop(currentFrame, palm2, fingers2);
+                playLoop(tr(currentFrame), hand2);
             }
-            playLoop(recordedFrames[frameNum], palm, fingers);
+            playLoop(recordedFrames[frameNum], hand);
             if (!isPaused) {
                 frameNum++;
             }
@@ -217,8 +263,8 @@
         if (isRecording) {
             recordedFrames.push(tr(currentFrame));
         }
-        playLoop(currentFrame, palm, fingers);
-        playLoop(currentFrame, palm2, fingers2);
+        playLoop(tr(currentFrame), hand);
+        playLoop(tr(currentFrame), hand2);
     }
 
     function similarities() {
@@ -303,41 +349,139 @@
         return [vec3.x,vec3.y,vec3.z];
     }
 
-    function playLoop( frame, palm, fingers ) {
-        var hand, direction, len, finger, pointable;
-        if ( frame.hands.length > 0) {
-            hand = frame.hands[0];
-            palm.position.set( hand.stabilizedPalmPosition[0], hand.stabilizedPalmPosition[1], hand.stabilizedPalmPosition[2] );
-            direction = v(0,0,-1);
-            palm.lookAt( direction.add( palm.position ) );
-            roll = Math.atan2( hand.palmNormal[0], hand.palmNormal[1] );
-            palm.rotation.z = roll;
-            palm.visible = true;
-        } else {
-            palm.visible = false;
-        }
+    // function playLoop( frame, palm, fingers ) {
+    //     var hand, direction, len, finger, pointable;
+    //     if ( frame.hands.length > 0) {
+    //         hand = frame.hands[0];
+    //         palm.position.set( hand.stabilizedPalmPosition[0], hand.stabilizedPalmPosition[1], hand.stabilizedPalmPosition[2] );
+    //         direction = v(0,0,-1);
+    //         palm.lookAt( direction.add( palm.position ) );
+    //         roll = Math.atan2( hand.palmNormal[0], hand.palmNormal[1] );
+    //         palm.rotation.z = roll;
+    //         palm.visible = true;
+    //     } else {
+    //         palm.visible = false;
+    //     }
 
-        len = frame.pointables.length
-        if ( len > 0) {
-            palm.hasFingers = true;
-            for (var i = 0; i < 5; i++) {
-                finger = fingers[i];
-                if ( i < len ) {
-                    pointable = frame.pointables[i];
-                    finger.position.set( pointable.stabilizedTipPosition[0], pointable.stabilizedTipPosition[1], pointable.stabilizedTipPosition[2] );
-                    direction = vv(pointable.direction);  // best so far
-                    finger.lookAt( direction.add( finger.position ) );
-                    finger.scale.z = 0.05 * pointable.length;
-                    finger.visible = true;
-                } else {
-                    fingers[i].visible = false;
+    //     len = frame.pointables.length
+    //     if ( len > 0) {
+    //         palm.hasFingers = true;
+    //         for (var i = 0; i < 5; i++) {
+    //             finger = fingers[i];
+    //             if ( i < len ) {
+    //                 pointable = frame.pointables[i];
+    //                 finger.position.set( pointable.stabilizedTipPosition[0], pointable.stabilizedTipPosition[1], pointable.stabilizedTipPosition[2] );
+    //                 direction = vv(pointable.direction);  // best so far
+    //                 finger.lookAt( direction.add( finger.position ) );
+    //                 finger.scale.z = 0.05 * pointable.length;
+    //                 finger.visible = true;
+    //             } else {
+    //                 fingers[i].visible = false;
+    //             }
+    //         }
+    //     } else if ( palm.hasFingers ) {
+    //         for (var i = 0; i < 5; i++) {
+    //             fingers[i].visible = false;
+    //         }
+    //         palm.hasFingers = false;
+    //     }
+    // }
+
+    function playLoop(frame, handMesh) {
+        if (frame.hands.length > 0) { // do stuff if at least one hand is detected
+            var leapHand = frame.hands[0], // grab the first hand
+                l = frame.pointables, // grab fingers
+                handObj, fingersObj;
+            var leapFingers = [l[2],l[3],l[1],l[4],l[0]];
+            // grab, structure and apply hand position data
+            handObj = {
+                position: {
+                    z: 0,
+                    y: 0,
+                    x: 0
+                },
+                rotation: {
+                    z: leapHand.palmNormal[2],
+                    y: leapHand.palmNormal[0],
+                    x: -Math.atan2(leapHand.palmNormal[0], leapHand.palmNormal[1]) + Math.PI
+                },
+                update: function() {
+                    var VectorDir = new THREE.Vector3(0,0,-1);
+                    handMesh.lookAt(VectorDir.add(handMesh.position)); // setup view
+                    handMesh.position = this.position; // apply position
+                    handMesh.bones[1].rotation.set(this.rotation.x, this.rotation.y, this.rotation.z); // apply rotation
                 }
+            };
+
+            // grab, structure and apply fingers position data
+            fingersObj = {
+                update: function (boneNum, fingerNum, isThumb) {
+                    var bone = handMesh.bones[boneNum], // define main bone
+                        phalanges = [handMesh.bones[boneNum+1], handMesh.bones[boneNum+2]], // define phalanges bones
+                        finger = leapFingers[fingerNum]; // grab finger
+                    if (!finger) return;
+                    var dir = finger.direction; // grab direction
+
+                    // if current finger is thumb, use only one additional phalange
+                    if (!!isThumb) {
+                        phalanges = [handMesh.bones[boneNum+1]];
+                    }
+
+                    // make sure fingers won't go into weird position
+                    for (var i = 0, length = dir.length; i < length; i++) {
+                        if (dir[i] >= 0.1) {
+                            dir[i] = 0.1;
+                        }
+                    }
+
+                    bone.rotation.set(0, -dir[0], -dir[1]); // apply rotation to the main bone
+
+                    // apply rotation to additional phalanges
+                    for (var i = 0, length = phalanges.length; i < length; i++) {
+                        var phalange = phalanges[i];
+
+                        phalange.rotation.set(0, 0, -dir[1]);
+                    }
+                },
+
+                /*
+                 * define each finger and update its position
+                 * passing main bone number and finger number
+                 */
+                fingers: {
+                    pinky: function() {
+                        fingersObj.update(3, 3);
+                    },
+                    ring: function() {
+                        fingersObj.update(7, 1);
+                    },
+                    mid: function() {
+                        fingersObj.update(11, 0);
+                    },
+                    index: function() {
+                        fingersObj.update(15, 2);
+                    },
+                    thumb: function() {
+                        fingersObj.update(19, 4, true);
+                    }
+                },
+
+                // update all fingers function
+                updateAll: function() {
+                    var fingers = this.fingers;
+
+                    for (var finger in fingers) {
+                        fingers[finger]();
+                    }
+                }
+            };
+
+            handObj.update(); // update hand postion
+
+            // update fingers position if all five fingers are detected
+            if (leapFingers.length === 5) {
+                fingersObj.updateAll();
             }
-        } else if ( palm.hasFingers ) {
-            for (var i = 0; i < 5; i++) {
-                fingers[i].visible = false;
-            }
-            palm.hasFingers = false;
         }
     }
 
@@ -390,8 +534,11 @@
       return this.indexOf(this.min());
     };
 
+    var pair;
+
     function DTW(arr1, arr2) {
-        var dist = [], pos = [], pair = [];
+        var dist = [], pos = [];
+        pair = [];
         var n = arr1.length, m = arr2.length;
         var l = 10;
         var t = 2;
@@ -407,8 +554,8 @@
                 if (i == 1) {
                     dist[i][j] = 0;
                 } else {
-                    dist[i][j] = dist[i-1].slice([1,i-l,j-t].max(),j).min();
-                    pos[i][j] = dist[i-1].slice([1,i-l,j-t].max(),j).minpos() + [1,i-l,j-t].max();
+                    dist[i][j] = dist[i-1].slice([1,i-l,j-t].max(),j+1).min();
+                    pos[i][j] = dist[i-1].slice([1,i-l,j-t].max(),j+1).minpos() + [1,i-l,j-t].max();
                 }
             }
             for (var j = max(1,i-l); j <= min(m,i+l) ; j++) {

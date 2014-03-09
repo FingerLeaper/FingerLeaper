@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="/mint/?js" type="text/javascript"></script>
+		<meta charset="utf-8" />
+		<title>Point Counter</title>
+
+		<link href="/assets/projects/roundabout2/demos/demos.css" rel="stylesheet" />
+		<style>
+			.crappy-plastic-part-made-in-china {
+				background-color: #222;
+				height: 1.4em;
+				font-size: 6em;
+				overflow: hidden;
+			}
+			.pad {
+				width: 5em;
+				margin: 0 auto;
+				height: 1.8em;
+			}
+			ul {
+				list-style: none;
+				padding: 0;
+				margin: -4.25em -14px 0 0;
+				width: 0.85em;
+				height: 12em;
+				float: left;
+			}
+			li {
+				height: 4em;
+				width: 0.7em;
+				line-height: 2;
+				background-color: #222;
+				color: #fff;
+				text-align: center;
+				cursor: pointer;
+				font-weight: bold;
+				font-family: "Helvetica Neue", Arial, sans-serif;
+			}
+				li.roundabout-in-focus {
+					cursor: default;
+				}
+			li span {
+				display: block;
+				padding-top: 6em;
+			}
+
+			#carbonads-container {
+				clear: both;
+				margin-top: 1em;
+			}
+			#carbonads-container .carbonad {
+				margin: 0 auto;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Point Counter</h1>
+
+		<div class="crappy-plastic-part-made-in-china">
+			<div class="pad">
+				<ul id="digit-6">
+					<li>0</li>
+					<li>1</li>
+					<li>2</li>
+					<li>3</li>
+					<li>4</li>
+					<li>5</li>
+					<li>6</li>
+					<li>7</li>
+					<li>8</li>
+					<li>9</li>
+				</ul>
+				<ul id="digit-5">
+					<li>0</li>
+					<li>1</li>
+					<li>2</li>
+					<li>3</li>
+					<li>4</li>
+					<li>5</li>
+					<li>6</li>
+					<li>7</li>
+					<li>8</li>
+					<li>9</li>
+				</ul>
+				<ul id="digit-4">
+					<li>0</li>
+					<li>1</li>
+					<li>2</li>
+					<li>3</li>
+					<li>4</li>
+					<li>5</li>
+					<li>6</li>
+					<li>7</li>
+					<li>8</li>
+					<li>9</li>
+				</ul>
+				<ul id="digit-3">
+					<li>0</li>
+					<li>1</li>
+					<li>2</li>
+					<li>3</li>
+					<li>4</li>
+					<li>5</li>
+					<li>6</li>
+					<li>7</li>
+					<li>8</li>
+					<li>9</li>
+				</ul>
+				<ul id="digit-2">
+					<li>0</li>
+					<li>1</li>
+					<li>2</li>
+					<li>3</li>
+					<li>4</li>
+					<li>5</li>
+					<li>6</li>
+					<li>7</li>
+					<li>8</li>
+					<li>9</li>
+				</ul>
+				<ul id="digit-1">
+					<li>0</li>
+					<li>1</li>
+					<li>2</li>
+					<li>3</li>
+					<li>4</li>
+					<li>5</li>
+					<li>6</li>
+					<li>7</li>
+					<li>8</li>
+					<li>9</li>
+				</ul>
+				<ul id="digit-0">
+					<li>0</li>
+					<li>1</li>
+					<li>2</li>
+					<li>3</li>
+					<li>4</li>
+					<li>5</li>
+					<li>6</li>
+					<li>7</li>
+					<li>8</li>
+					<li>9</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="interact">
+			<a href="#" id="contribute">Add a Random Amount</a>
+			<a href="#" id="how-much">What’s the Total?</a>
+		</div>
+
+		<div class="return">
+			<a href="/projects/roundabout#/demos">Back to Roundabout</a>
+		</div>
+
+		<script src="/lib/js/libraries/jquery.js"></script>
+		<script src="/lib/js/projects/roundabout/jquery.roundabout2.js"></script>
+		<script src="/lib/js/projects/roundabout-shapes/jquery.roundabout-shapes2.js"></script>
+		<script src="/lib/js/plugins/jquery.easing.js"></script>
+		<script>
+			var count = 0,
+			    clickable = true;
+
+			$(document).ready(function() {
+				$('ul').roundabout({
+					shape: "waterWheel"
+				});
+
+				$('#contribute')
+					.click(function() {
+						if (!clickable) {
+							return false;
+						}
+
+						$('.interact a').fadeTo(100, 0.5);
+						clickable = false;
+
+						count += Math.ceil(Math.random() * 10000);
+						applyCount(count);
+						return false;
+					});
+
+				$('#how-much')
+					.click(function() {
+						alert('The counter is currently at ' + count + '.');
+						return false;
+					});
+			});
+
+			function applyCount(total) {
+				var i, part, child, factor, distance,
+				    count = new String(total),
+				    parts = count.split("").reverse();
+
+				if (total > 9999999) {
+					tilt();
+					return false;
+				}
+
+				for (i = parts.length - 1; i >= 0; i--) {
+					part = parseInt(parts[i], 10);
+
+					// get current position
+					child = $('ul#digit-' + i).data('roundabout').childInFocus;
+					factor = (part < child) ? (10 + part) - child : part - child;
+					distance = factor * 36;
+
+					if (i) {
+						$('ul#digit-' + i).roundabout('animateToDelta', -distance);
+					} else {
+						$('ul#digit-' + i).roundabout('animateToDelta', -distance, function() {
+							$('.interact a').fadeTo(100, 1);
+							clickable = true;
+						});
+					}
+
+				}
+			}
+
+			function tilt() {
+				for (var i = 0; i < 7; i++) {
+					var amount = (Math.random()) ? 5 + (Math.random() * 20 - 10) : -5 - (Math.random() * 20 - 10);
+					$('ul#digit-' + i).roundabout('animateToDelta', amount).find('li').css('color', '#c00');
+				}
+			}
+	</body>
+</html>

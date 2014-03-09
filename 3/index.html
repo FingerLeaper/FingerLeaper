@@ -1,140 +1,281 @@
 <html>
 <head>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-<script src="http://js.leapmotion.com/0.2.2/leap.min.js"></script>
-<script src="contentflow.js"></script>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" type="text/css" href="css/main.css">
-<script tyle="text/javascript">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="http://js.leapmotion.com/0.2.2/leap.min.js"></script>
+    <script src="js/jquery.roundabout.min.js"></script>
 
-var cf = new ContentFlow('contentFlow', {reflectionColor: "#000000"});
+    <script src="base64.js"></script>
+    <script src="Detector.js"></script>
+    <script src="three.min.js"></script>
+    <script src="TrackballControls.js"></script>
+    <script src="stats.min.js"></script>
+    <script src="FileSaver.min.js"></script>
+    <script src="rawinflate.js"></script>
+    <script src="rawdeflate.js"></script>
+    <script src="js/uikit.min.js"></script>
+    <script src="js/d3.min.js"></script>
+    <script src="js/countup.min.js"></script>
+    <script src="notify.min.js"></script>
 
-$(document).ready(function() {
+    <script src="js/main.js"></script>
+    <script src="js/log.js"></script>
+    <script src="js/gesture.js"></script>
+    <script src="js/waiting.js"></script>
+    <script src="js/exercise.js"></script>
+    <script src="js/select_exercise.js"></script>
 
-	// debug use
-	$('#toggle1').click(function () {
-		$('.contentFlow').fadeToggle();
-	})
-	$('#toggle2').click(function () {
-		$('.waiting').fadeToggle();
-	})
-	$('#toggle3').click(function () {
-		$('.finish').fadeToggle();
-	})
-	$('#toggle4').click(function () {
-		$('.countdown').fadeToggle();
-	})
-
-
-	var ctl = new Leap.Controller({enableGestures: true});
-
-	var swiper = ctl.gesture('swipe');
-
-	var totalDistance = 0;
-
-	var tolerance = 10;
-	var cooloff = 100;
-
-	var slider = _.debounce(function(xDir) {
-  	if (xDir == 1) {
-      console.log(xDir);
-  		cf.moveTo('pre');
-    }
-  	else if (xDir == -1) {
-      console.log(xDir);
-  		cf.moveTo('next');
-    }
-  	// if (xDir == -1) cf.moveTo('pre');
-  	// else if (xDir == 1) cf.moveTo('next');
-	}, cooloff);
-
-	swiper.update(function(g) {
-	if (Math.abs(g.translation()[0]) > tolerance || Math.abs(g.translation()[1]) > tolerance) {
-		var xDir = Math.abs(g.translation()[0]) > tolerance ? (g.translation()[0] > 0 ? -1 : 1) : 0;
-    slider(xDir);
-	}
-	});
-
-	ctl.connect();
-
-})
-</script>
+    <link rel="stylesheet" href="css/uikit.min.css">
+    <link rel="stylesheet" href="notify.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/log.css">
+    <link rel="stylesheet" href="css/waiting.css">
+    <link rel="stylesheet" href="css/exercise.css">
+    <link rel="stylesheet" href="font-awesome-4.0.3/css/font-awesome.css">
 </head>
 <body>
-	<!-- debug use -->
-	<button id='toggle1'>Toggle1</button>
-	<button id='toggle2'>Toggle2</button>
-	<button id='toggle3'>Toggle3</button>
-	<button id='toggle4'>Toggle4</button>
-
-    <!-- ===== FLOW ===== -->
-    <div id="contentFlow" class="ContentFlow">
-        <!-- should be place before flow so that contained images will be loaded first -->
-        <div class="loadIndicator"><div class="indicator"></div></div>
-
-        <div class="flow">
-            <div class="item">
-                <img class="content" src="img/app1.png"/>
-                <div class="caption">pic1: some flowers</div>
-            </div>
-            <div class="item">
-                <img class="content" src="img/app2.png"/>
-                <div class="caption">pic2: some flowers</div>
-            </div>
-            <div class="item">
-                <img class="content" src="img/app3.png"/>
-                <div class="caption">pic3: some flowers</div>
-            </div>
-            <div class="item">
-                <img class="content" src="img/app1.png"/>
-                <div class="caption">pic4: some flowers</div>
-            </div>
-            <div class="item">
-                <img class="content" src="img/app2.png"/>
-                <div class="caption">pic5: some flowers</div>
-            </div>
-            <div class="item">
-                <img class="content" src="img/app3.png"/>
-                <div class="caption">pic6: some flowers</div>
-            </div>
+    <!-- ===== Main ===== -->
+    <div id="main" class="fade">
+        <h1>功能选择</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
         </div>
-        <div class="globalCaption"></div>
-        <div class="scrollbar">
-            <div class="slider"><div class="position"></div></div>
-        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_select_exercise();">
+                <i class="fa fa-play-circle icon"></i>
+                <span class="description">进入训练</span>
+            </li>
+            <li onclick="javascript:init_log();">
+                <i class="fa fa-archive icon"></i>
+                <span class="description">查看记录</span>
+            </li>
+            <li onclick="javascript:init_game();">
+                <i class="fa fa-gamepad icon"></i>
+                <span class="description">康复游戏</span>
+            </li>
+        </ul>
     </div>
+
 
     <!-- Waiting Page -->
-    <div class="waiting">
-    <div >Please Put Your Hand in the Valid Area.</div>
-    <div class="buttons">
-      <div class="button restart">
-        <img src="img/restart.png">
-      </div>
-      <div class="button menu">
-        <img src="img/menu.png">
-      </div>
+    <div id="waiting" class="fade">
+        <h1>Please Put Your Hand in the Valid Area.</h1>
+        <div class="valid_area">
+            <i class="fa fa-circle-o fa-6"></i>
+        </div>
     </div>
-    <div class="valid_area">
-      <img src="img/valid_area.png">
-    </div>
-  </div>
 
-  <!-- Finish Page -->
-  <div class="finish">
-    <div class="score"></div>
-    <div class="buttons">
-      <div class="button restart"><img src="img/restart.png"></div>
-      <div class="button next"><img src="img/next.png"></div>
-      <div class="button menu"><img src="img/menu.png"></div>
+    <div id="log" class="fade">
+        <h1>历史记录</h1>
+        <div class="banner">
+            <span>Swipe up to go back.</span>
+        </div>
+        <div id="graph"></div>
     </div>
-  </div>
+    <div id="select_exercise" class="fade">
+        <h1>动作选择</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
+        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_select_exercise2('thumb');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">拇指运动</span>
+            </li>
+            <li onclick="javascript:init_select_exercise2('index');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指运动</span>
+            </li>
+            <li onclick="javascript:init_select_exercise2('mid');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">中指运动</span>
+            </li>
+            <li onclick="javascript:init_select_exercise2('pinky');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">小指运动</span>
+            </li>
+            <li onclick="javascript:init_select_exercise2('whole');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">全掌运动</span>
+            </li>
+        </ul>
+    </div>
 
-  <!-- Count Down Page -->
-  <div class="countdown">
-    <div class="time_left">There is 1s left...</div>
-  </div>
+    <div id="game" class="fade">
+        <h1>康复游戏</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
+        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_main();">
+                <i class="fa fa-chain-broken icon"></i>
+                <span class="description">切水果</span>
+            </li>
+            <li onclick="javascript:init_main();">
+                <i class="fa fa-cut icon"></i>
+                <span class="description">切绳子</span>
+            </li>
+            <li onclick="javascript:init_main();">
+                <i class="fa fa-music icon"></i>
+                <span class="description">弹钢琴</span>
+            </li>
+        </ul>
+    </div>
+
+    <div id="index" class="fade">
+        <h1>食指运动</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
+        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_exercise('index_bend');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指弯曲运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_wave');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指摆动运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_circle');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指绕环运动</span>
+            </li>
+        </ul>
+    </div>
+
+    <div id="thumb" class="fade">
+        <h1>食指运动</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
+        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_exercise('index_bend');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指弯曲运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_wave');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指摆动运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_circle');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指绕环运动</span>
+            </li>
+        </ul>
+    </div>
+
+    <div id="mid" class="fade">
+        <h1>食指运动</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
+        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_exercise('index_bend');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指弯曲运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_wave');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指摆动运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_circle');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指绕环运动</span>
+            </li>
+        </ul>
+    </div>
+
+    <div id="pinky" class="fade">
+        <h1>食指运动</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
+        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_exercise('index_bend');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指弯曲运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_wave');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指摆动运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_circle');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指绕环运动</span>
+            </li>
+        </ul>
+    </div>
+
+    <div id="whole" class="fade">
+        <h1>食指运动</h1>
+        <div class="banner">
+            <span>Swipe left and right to switch, down to select, up to go back.</span>
+        </div>
+        <ul class="roundabout">
+            <li onclick="javascript:init_exercise('index_bend');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指弯曲运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_wave');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指摆动运动</span>
+            </li>
+            <li onclick="javascript:init_exercise('index_circle');">
+                <i class="fa fa-circle icon"></i>
+                <span class="description">食指绕环运动</span>
+            </li>
+        </ul>
+    </div>
+
+    <div id="exercise" class="fade">
+        <h1>复健训练</h1>
+        <!-- <br>Read Data: <input type=file onchange="readFile(this)"/>
+        <button onclick="toggleReplay();" >Toggle Replay</button>
+        <button onclick="toggleRecording();" >Toggle Recording</button>
+        <button onclick="recordedFrames = [];"; >Clear data</button>
+        <button onclick=saveFile() >Save Data to File</button>
+        <br>Read Data2: <input type=file onchange="readFile2(this)"/>
+        <button onclick="exercise();" >Toggle Exercise</button>
+        <button onclick="recordedFrames2 = [];"; >Clear data</button>
+        <button onclick=saveFile2() >Save Data2 to File</button>
+        <br><button onclick="applyDTW();" >Apply DTW</button>
+        <button onclick="cancelDTW();" >Cancel DTW</button><br> -->
+        <div class="info-banner">
+            <span class="red">当前得分:</span>
+            <span id="current">100</span><br>
+
+            <span class="red">平均得分:</span>
+            <span id="average">100</span><br>
+
+            <span class="red">时间:</span>
+            <span id="timer1">00:00</span>/<span id="timer2">00:00</span><br>
+
+            <span class="red">项目:</span>
+            <span id="name"></span><br><br>
+
+            <span id="notifier" style="color:#bc2328;">向上挥手退出<br>向下挥手开始</span>
+        </div>
+        <div id="animation">
+            <div id="overlay">
+                <i class="fa fa-play-circle icon play"></i>
+            </div>
+        </div>
+    </div>
+
+      <!-- Finish Page -->
+    <div id="finish" class="fade">
+        <div class="score"></div>
+        <div class="buttons">
+            <div class="button restart"><img src="img/restart.png"></div>
+            <div class="button next"><img src="img/next.png"></div>
+            <div class="button menu"><img src="img/menu.png"></div>
+        </div>
+    </div>
+
+    <!-- Count Down Page -->
+    <div id="countdown" class="fade">
+        <div class="time_left">There is 1s left...</div>
+    </div>
 </body>
-<script src="js/main.js"></script>
 </html>
