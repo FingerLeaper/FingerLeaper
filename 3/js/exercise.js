@@ -46,10 +46,14 @@ function init() {
     var css, geometry, material, mesh;
     var geometry2, material2, mesh2;
 
+    var reader = new FileReader();
     $.get( "default.data", function( data ) {
         recordedFrames = JSON.parse(Base64.btou(RawDeflate.inflate(Base64.fromBase64(data))));
         $('#timer2')[0].innerText = sec2str(recordedFrames.length / FPS);
     });
+    reader.readAsText("default.data");
+
+    console.log("recordedFrames: " + recordedFrames.length);
 
     renderer = new THREE.WebGLRenderer( { antialias: true }  );
     renderer.setSize( 0.35 * window.innerWidth, window.innerHeight*0.75 );
@@ -179,6 +183,7 @@ function init() {
     setInterval(playFrame, 1000/FPS);
 
     setInterval(function() {
+        console.log("update score");
         if (isExercise) {
             $('#current')[0].innerText = ((1 - distance(currentFrame, recordedFrames[frameNum]))*100).toFixed(1);
             $('#average')[0].innerText = (100 - (total/(frameNum+1)*100)).toFixed(1);
@@ -488,6 +493,8 @@ function playLoop(frame, handMesh) {
 function distance(frame1, frame2) {
     dist = 0;
     for (var i = 0; i < 5; i++) {
+        if (frame1.pointables[i] == undefined || frame2.pointables[i] == undefined)
+            continue;
         dist += Math.sqrt(1-min(1,sq(vv(frame1.pointables[i].direction).dot(vv(frame2.pointables[i].direction)))));
     }
     return dist/5;

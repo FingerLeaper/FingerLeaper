@@ -21,6 +21,7 @@ function init_game() {
 $(document).ready(function() {
     // init_log();
     init_waiting();
+
     // init_exercise();
     $('.roundabout').roundabout();
 });

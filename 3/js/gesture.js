@@ -2,7 +2,7 @@ $(document).ready(function() {
     var ctl = new Leap.Controller({enableGestures: true});
     var swiper = ctl.gesture('swipe');
     var totalDistance = 0;
-    var tolerance = 10;
+    var tolerance = 5;
     var cooloff = 100;
     var unlocked = false;
     var unlocked_start = false;

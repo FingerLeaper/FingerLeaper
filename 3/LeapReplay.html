@@ -201,10 +201,12 @@
     }
 
     function readFile(that){
+        console.log(that);
         if ( that.files && that.files[0]){
             var reader = new FileReader();
             reader.onload = function (e) {
                 recordedFrames = JSON.parse(Base64.btou(RawDeflate.inflate(Base64.fromBase64(e.target.result))));
+                console.log(e.target.result);
             };
             reader.readAsText(that.files[0]);
         }
