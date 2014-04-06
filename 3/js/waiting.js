@@ -10,7 +10,6 @@ function init_waiting() {
     var valid_y = [mid_y - radius,mid_y + radius];
     var indicator = $('.position_indicator');
     Leap.loop( function( frame ) {
-        console.log("loop");
         if (frame.hands.length > 0 && app_status == 'waiting') {
             var hand  = frame.hands[0];
             position_x = (hand.palmPosition[0]) * 5 + mid_x;
@@ -32,6 +31,6 @@ function init_waiting() {
 
         }
         if (position_x > valid_x[0] && position_x < valid_x[1] && position_y > valid_y[0] && position_y < valid_y[1])
-            init_main();
+            init_login();
     });
 }

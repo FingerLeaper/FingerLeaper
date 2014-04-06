@@ -69,3 +69,36 @@ li span {
     border-radius: 3px;
 }
 
+.uk-form input[type=text]:focus,
+.uk-form input[type=password]:focus {
+    border-color: #ca8283;
+    background: #fef7f8;
+}
+
+.uk-button-primary {
+    background-color: #bc2328;
+}
+
+.uk-button-primary:hover, .uk-button-primary:focus {
+    background-color: #c8242c;
+}
+
+.notes {
+    width: 8000px;
+    margin-top: 50px;
+    font-size: 18px;
+}
+
+.note {
+    border-radius: 5px;
+    background-color: white;
+    width: 180px;
+    float: left;
+    padding: 20px;
+    margin: 20px;
+}
+
+span .description {
+    background-color: #f3f3f3;
+    width: 50px;
+}

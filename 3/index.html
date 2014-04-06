@@ -20,6 +20,7 @@
     <script src="notify.min.js"></script>
 
     <script src="js/main.js"></script>
+    <script src="js/login.js"></script>
     <script src="js/log.js"></script>
     <script src="js/gesture.js"></script>
     <script src="js/waiting.js"></script>
@@ -35,16 +36,51 @@
     <link rel="stylesheet" href="font-awesome-4.0.3/css/font-awesome.css">
 </head>
 <body>
+    <!-- Login -->
+    <div id="login" class="fade">
+        <h1>请登录</h1>
+        <div class="banner">
+            <span id="login_banner"></span>
+        </div>
+        <div style="text-align:center;">
+            <form class="uk-panel uk-panel-box uk-form" style="width:400px; background-color: #f3f3f3; margin:auto;">
+                <div class="uk-form-row">
+                    <input class="uk-width-1-1 uk-form-large" id="username" type="text" placeholder="用户名" autocomplete="on">
+                </div>
+                <div class="uk-form-row">
+                    <input class="uk-width-1-1 uk-form-large" id="password" type="password" placeholder="密码" autocomplete="on">
+                </div>
+                <div class="uk-form-row">
+                    <a class="uk-width-1-1 uk-button uk-button-primary uk-button-large" href="javascript:first_login();">登录</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Note -->
+    <div id="note" class="fade">
+        <h1>医嘱</h1>
+        <div class="banner">
+            <span>向上挥手返回</span>
+        </div>
+        <div class="notes" id="notes">
+        </div>
+    </div>
+
     <!-- ===== Main ===== -->
     <div id="main" class="fade">
-        <h1>功能选择</h1>
+        <h1 id="welcome"></h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择</span>
         </div>
         <ul class="roundabout">
             <li onclick="javascript:init_select_exercise();">
                 <i class="fa fa-play-circle icon"></i>
                 <span class="description">进入训练</span>
+            </li>
+            <li onclick="javascript:init_note();">
+                <i class="fa fa-file icon"></i>
+                <span class="description">查看医嘱</span>
             </li>
             <li onclick="javascript:init_log();">
                 <i class="fa fa-archive icon"></i>
@@ -54,13 +90,16 @@
                 <i class="fa fa-gamepad icon"></i>
                 <span class="description">康复游戏</span>
             </li>
+            <li onclick="javascript:logout();">
+                <i class="fa fa-user icon"></i>
+                <span class="description">退出当前账户</span>
+            </li>
         </ul>
     </div>
 
-
     <!-- Waiting Page -->
     <div id="waiting" class="fade">
-        <h1>Please Put Your Hand in the Circle.</h1>
+        <h1>请将手放在Leap Motion设备上方</h1>
         <div class="valid_area">
             <i class="fa fa-circle-o fa-6"></i>
         </div>
@@ -72,16 +111,20 @@
     <div id="log" class="fade">
         <h1>历史记录</h1>
         <div class="banner">
-            <span>Swipe up to go back.</span>
+            <span>向上挥手返回</span>
         </div>
         <div id="graph"></div>
     </div>
     <div id="select_exercise" class="fade">
         <h1>动作选择</h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择, 向上挥手返回</span>
         </div>
         <ul class="roundabout">
+            <li onclick="javascript:init_exercise('index_bend');">
+                <i class="fa fa-medkit icon"></i>
+                <span class="description">医生建议动作</span>
+            </li>
             <li onclick="javascript:init_select_exercise2('thumb');">
                 <i class="fa fa-circle icon"></i>
                 <span class="description">拇指运动</span>
@@ -108,7 +151,7 @@
     <div id="game" class="fade">
         <h1>康复游戏</h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择, 向上挥手返回</span>
         </div>
         <ul class="roundabout">
             <li onclick="javascript:init_main();">
@@ -129,7 +172,7 @@
     <div id="index" class="fade">
         <h1>食指运动</h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择, 向上挥手返回</span>
         </div>
         <ul class="roundabout">
             <li onclick="javascript:init_exercise('index_bend');">
@@ -150,7 +193,7 @@
     <div id="thumb" class="fade">
         <h1>食指运动</h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择, 向上挥手返回</span>
         </div>
         <ul class="roundabout">
             <li onclick="javascript:init_exercise('index_bend');">
@@ -171,7 +214,7 @@
     <div id="mid" class="fade">
         <h1>食指运动</h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择, 向上挥手返回</span>
         </div>
         <ul class="roundabout">
             <li onclick="javascript:init_exercise('index_bend');">
@@ -192,7 +235,7 @@
     <div id="pinky" class="fade">
         <h1>食指运动</h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择, 向上挥手返回</span>
         </div>
         <ul class="roundabout">
             <li onclick="javascript:init_exercise('index_bend');">
@@ -213,7 +256,7 @@
     <div id="whole" class="fade">
         <h1>食指运动</h1>
         <div class="banner">
-            <span>Swipe left and right to switch, down to select, up to go back.</span>
+            <span>左右挥手以切换, 向下挥手选择, 向上挥手返回</span>
         </div>
         <ul class="roundabout">
             <li onclick="javascript:init_exercise('index_bend');">

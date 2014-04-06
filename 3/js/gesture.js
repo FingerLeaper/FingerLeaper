@@ -21,6 +21,8 @@ $(document).ready(function() {
             case 'select_exercise2':
             case 'game':
             case 'log':
+            case 'login':
+            case 'note':
                 switch (gesture) {
                     case 'swipe':
                         var xDir = parameter.xDir;
@@ -36,11 +38,19 @@ $(document).ready(function() {
                         else if (yDir == -1) {
                             // Swipe downwards
                             $('.roundabout-in-focus:visible').click()
+                            if (app_status == 'login' && localStorage.getItem('current_user') != undefined) {
+                                var username = localStorage.getItem('current_user');
+                                var password = Base64.fromBase64(localStorage.getItem('password'));
+                                login(username, password);
+                            }
                         }
                         else if (yDir == 1) {
                             switch (app_status) {
                                 case 'select_exercise2':
                                     switch_to('select_exercise');
+                                    break;
+                                case 'main':
+                                case 'login':
                                     break;
                                 default:
                                     switch_to('main');
@@ -73,16 +83,16 @@ $(document).ready(function() {
                                 setTimeout(function() {
                                     unlocked = false;
                                 }, 3000);
-                                $.UIkit.notify('Swipe up again in 3s to exit.',{timeout:3000,pos:'top-left',status:'danger'});
+                                $.UIkit.notify('3s 内再次向上挥手退出',{timeout:3000,pos:'top-left',status:'danger'});
                             }
                         }
                         else if (yDir == -1 && !isExercise) {
                             if (unlocked_start) {
                                 unlocked_start = false;
-                                $.UIkit.notify('Start after 1s.',{timeout:1000,pos:'top-left',status:'success'});
+                                $.UIkit.notify('1s 后开始',{timeout:1000,pos:'top-left',status:'success'});
                                 setTimeout(startExercise, 1000);
                             } else {
-                                $.UIkit.notify('Swipe down again in 3s to start.',{timeout:3000,pos:'top-left',status:'warning'});
+                                $.UIkit.notify('3s 内再次向下挥手开始',{timeout:3000,pos:'top-left',status:'warning'});
                                 unlocked_start = true;
                                 setTimeout(function() {
                                     unlocked_start = false;

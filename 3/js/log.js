@@ -1,3 +1,16 @@
+var count;
+function init_note() {
+  switch_to('note');
+  count = 0;
+  for (var i = 0; i < notes.length; i++) {
+    var note = notes[i];
+    var newNode = document.createElement("div");
+    newNode.innerHTML = "<p class=\"description\">日期:" + note.date + "</p><p>内容:</p><p style=\"font-size: 16px;\">" + note.content+"</p>";
+    newNode.className = "note";
+    $('#notes')[0].appendChild(newNode);
+  }
+}
+
 function init_log() {
   switch_to('log');
   var margin = {top: 20, right: 120, bottom: 30, left: 150},
