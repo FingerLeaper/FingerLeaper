@@ -2,8 +2,8 @@ $(document).ready(function() {
     var ctl = new Leap.Controller({enableGestures: true});
     var swiper = ctl.gesture('swipe');
     var totalDistance = 0;
-    var tolerance = 5;
-    var cooloff = 100;
+    var tolerance = 4;
+    var cooloff = 200;
     var unlocked = false;
     var unlocked_start = false;
 
@@ -27,6 +27,7 @@ $(document).ready(function() {
                     case 'swipe':
                         var xDir = parameter.xDir;
                         var yDir = parameter.yDir;
+                        console.log('swipe: x='+xDir+', y='+yDir);
                         if (xDir == 1) {
                             // Swipe left
                             $('.roundabout:visible').roundabout("animateToPreviousChild")
@@ -57,7 +58,6 @@ $(document).ready(function() {
                                     break;
                             }
                         }
-                        console.log('swipe: x='+xDir+', y='+yDir);
                         break;
                     case 'keyTap':
                         $('.roundabout-in-focus:visible').click()
@@ -111,7 +111,7 @@ $(document).ready(function() {
             case 'game':
                 break;
         }
-    }, cooloff);
+    }, cooloff, true);
 
     swiper.update(function(g) {
         if (Math.abs(g.translation()[0]) > tolerance || Math.abs(g.translation()[1]) > tolerance) {
